@@ -46,6 +46,14 @@ public class App
     public static List<AfmImage> readAfmFile (File file) throws IOException {
     	char[] header = {'G','W','Y','P',
     			'G', 'w', 'y', 'C', 'o', 'n', 't', 'a', 'i', 'n', 'e', 'r', '\u0000'};
+    	Map<Character, Integer> dataTypes = new HashMap<>();
+    	dataTypes.put('b', 1);
+    	dataTypes.put('c', 1);
+    	dataTypes.put('i', 4);
+    	dataTypes.put('q', 8);
+    	dataTypes.put('d', 8);
+    	dataTypes.put('s', 0);
+    	dataTypes.put('o', -1);
     	
     	
     	ArrayList<AfmImage> afmImages = new ArrayList<AfmImage>();
@@ -67,6 +75,28 @@ public class App
     		dataSize=byteBuffer.order(ByteOrder.LITTLE_ENDIAN).getInt();
     		
     		
+
+    		
+    			
+    			str = new StringBuilder();
+    			do {
+        			c=(char) fileStream.readByte();
+        			str.append(c);
+        		}while(c!='\u0000'); 
+    			str.deleteCharAt(str.length()-1);
+    			
+    			
+
+			c=(char) fileStream.readByte();
+
+		
+			bitNo=-10;
+			for(Map.Entry<Character, Integer> entry : dataTypes.entrySet()) {
+				if(entry.getKey()==c) 
+					bitNo=entry.getValue();
+			}
+			if(bitNo==-10) throw new IllegalArgumentException("Unknown data type");
+
     		
     	}
     	finally
