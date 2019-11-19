@@ -2,7 +2,7 @@ package pl.nanocode.gwyddionDB;
 
 import java.util.ArrayList;
 
-public class AfmImage {
+public class AfmImage {	
 	public String title;
 	private double minZ, maxZ;		//z-scale min and max
 	private double xreal, yreal;	//horizontal and vertical dimensions in physical units
