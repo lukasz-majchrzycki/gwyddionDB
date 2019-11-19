@@ -67,22 +67,26 @@ public class App
     	dataTypes.put('s', 0);
     	dataTypes.put('o', -1);
     	
-    	Map<Pattern, byte[]> imageData = new HashMap<>();
-    	imageData.put(Pattern.compile("/[0-9]*/data/title"), null  );
-    	imageData.put(Pattern.compile("/[0-9]*/base/range-type"), null  );
-    	imageData.put(Pattern.compile("/[0-9]*/base/min"), null  );
-    	imageData.put(Pattern.compile("/[0-9]*/base/max"), null  );
-    	//imageData.put(Pattern.compile("/[0-9]*/data"), null  );
+    	Map<Pattern, Double> imageDoubleData = new HashMap<>(); 	
+    	imageDoubleData.put(Pattern.compile("/[0-9]*/base/min"), null  );
+    	imageDoubleData.put(Pattern.compile("/[0-9]*/base/max"), null  );
+    	
+    	Map<Pattern, Integer> imageIntData = new HashMap<>();
+    	imageIntData.put(Pattern.compile("/[0-9]*/base/range-type"), null  );
+    	
+    	Map<Pattern, String> imageStringData = new HashMap<>();
+    	imageStringData.put(Pattern.compile("/[0-9]*/data/title"), null  );
+    	
+    	Map<Pattern, ArrayList<Double>> imageDataArray = new HashMap<>(); 
+    	imageDataArray.put(Pattern.compile("/[0-9]*/data"), null  );
     	
     	ArrayList<AfmImage> afmImages = new ArrayList<AfmImage>();
     	DataInputStream fileStream =null;
     	char c;
-    	double d;
     	int i, dataSize, bitNo, objectSize;
     	String str, str2;
     	byte[] bArray = {};
     	ByteBuffer byteBuffer = ByteBuffer.allocate(8);
-    	ByteBuffer byteBuffer2 = ByteBuffer.allocate(8);
     	
     	
     	try {
@@ -102,15 +106,9 @@ System.out.println("Data size: "+dataSize);
     		
     		for(i=0;i<5;i++) {
     			
-    			str = App.readStringFromFile(fileStream);
-    			
-    			
-System.out.printf(str+"\t");
-
+    		str = App.readStringFromFile(fileStream);  
 			c=(char) fileStream.readByte();
 
-System.out.printf(c+"\t");
-		
 			bitNo=-10;
 			for(Map.Entry<Character, Integer> entry : dataTypes.entrySet()) {
 				if(entry.getKey()==c) 
@@ -118,36 +116,52 @@ System.out.printf(c+"\t");
 			}
 			if(bitNo==-10) throw new IllegalArgumentException("Unknown data type");
 
-System.out.printf(bitNo+"\n");			
 
-
+			byteBuffer.rewind();
+			
 			if(bitNo>0) {
 				bArray=fileStream.readNBytes(bitNo);
+				if(c=='i') {
+					for(Map.Entry<Pattern, Integer> entry: imageIntData.entrySet() ) {
+						Matcher matcher = entry.getKey().matcher(str.toString());
+						if(matcher.matches()) {
+							entry.setValue(byteBuffer.put(bArray)
+							.order(ByteOrder.LITTLE_ENDIAN).rewind().getInt() );
+		 					}
+						}					
+				}
+				else if(c=='d') {
+					for(Map.Entry<Pattern, Double> entry: imageDoubleData.entrySet() ) {
+						Matcher matcher = entry.getKey().matcher(str.toString());
+						if(matcher.matches()) {
+							entry.setValue(byteBuffer.put(bArray)
+							.order(ByteOrder.LITTLE_ENDIAN).rewind().getDouble() );
+		 					}
+						}				
+				}
 			}
 			else if(bitNo==0) {
 				str2 = App.readStringFromFile(fileStream);
-				bArray=str2.getBytes("US-ASCII");
+				for(Map.Entry<Pattern, String> entry: imageStringData.entrySet() ) {
+					Matcher matcher = entry.getKey().matcher(str.toString());
+					if(matcher.matches()) {
+						entry.setValue(str2);
+	 					}
+					}
 			}
 			else if(bitNo==-1) {
 				do {
 					c=(char) fileStream.readByte();
 					
 				}while(c!='\u0000'); 
-				byteBuffer2.put(fileStream.readNBytes(4));
-				byteBuffer2.rewind();
-				objectSize=byteBuffer2.order(ByteOrder.LITTLE_ENDIAN).getInt();
+				byteBuffer.put(fileStream.readNBytes(4));
+				byteBuffer.rewind();
+				objectSize=byteBuffer.order(ByteOrder.LITTLE_ENDIAN).getInt();
 				
 				fileStream.readNBytes(objectSize);
 				
 			}	
-
-			for(Map.Entry<Pattern, byte[]> entry: imageData.entrySet() ) {
-				Matcher matcher = entry.getKey().matcher(str.toString());
-				if(matcher.matches()) {
-					entry.setValue(bArray);
- 					}
-				}
-			
+		
 
     		}
     		
