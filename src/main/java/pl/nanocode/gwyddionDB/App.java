@@ -55,12 +55,22 @@ public class App
     	dataTypes.put('s', 0);
     	dataTypes.put('o', -1);
     	
+    	Map<Pattern, byte[]> imageData = new HashMap<>();
+    	imageData.put(Pattern.compile("/[0-9]*/data/title"), null  );
+    	imageData.put(Pattern.compile("/[0-9]*/base/range-type"), null  );
+    	imageData.put(Pattern.compile("/[0-9]*/base/min"), null  );
+    	imageData.put(Pattern.compile("/[0-9]*/base/max"), null  );
+    	//imageData.put(Pattern.compile("/[0-9]*/data"), null  );
     	
     	ArrayList<AfmImage> afmImages = new ArrayList<AfmImage>();
     	DataInputStream fileStream =null;
     	char c;
+    	double d;
     	int i, dataSize, bitNo, objectSize;
     	StringBuilder str, str2;
+    	byte[] bArray = {};
+    	ByteBuffer byteBuffer = ByteBuffer.allocate(8);
+    	ByteBuffer byteBuffer2 = ByteBuffer.allocate(8);
     	
     	
     	try {
@@ -77,6 +87,7 @@ public class App
     		
 
     		
+    		for(i=0;i<5;i++) {
     			
     			str = new StringBuilder();
     			do {
@@ -97,6 +108,42 @@ public class App
 			}
 			if(bitNo==-10) throw new IllegalArgumentException("Unknown data type");
 
+
+
+			if(bitNo>0) {
+				bArray=fileStream.readNBytes(bitNo);
+			}
+			else if(bitNo==0) {
+				str2 = new StringBuilder();
+				do {
+					c=(char) fileStream.readByte();
+					str2.append(c);
+				}while(c!='\u0000'); 
+				str2.deleteCharAt(str2.length()-1);
+				bArray=str2.toString().getBytes("US-ASCII");
+			}
+			else if(bitNo==-1) {
+				do {
+					c=(char) fileStream.readByte();
+					
+				}while(c!='\u0000'); 
+				byteBuffer2.put(fileStream.readNBytes(4));
+				byteBuffer2.rewind();
+				objectSize=byteBuffer2.order(ByteOrder.LITTLE_ENDIAN).getInt();
+				
+				fileStream.readNBytes(objectSize);
+				
+			}	
+
+			for(Map.Entry<Pattern, byte[]> entry: imageData.entrySet() ) {
+				Matcher matcher = entry.getKey().matcher(str.toString());
+				if(matcher.matches()) {
+					entry.setValue(bArray);
+ 					}
+				}
+			
+
+    		}
     		
     	}
     	finally
