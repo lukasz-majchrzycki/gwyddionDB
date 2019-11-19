@@ -42,6 +42,18 @@ public class App
 
     }
     
+    private static String readStringFromFile (DataInputStream fileStream) throws IOException {
+		StringBuilder str = new StringBuilder();
+		char c;
+		do {
+			c=(char) fileStream.readByte();
+			str.append(c);
+		}while(c!='\u0000'); 
+		str.deleteCharAt(str.length()-1);
+		
+		return str.toString();
+    }
+    
     
     public static List<AfmImage> readAfmFile (File file) throws IOException {
     	char[] header = {'G','W','Y','P',
@@ -67,7 +79,7 @@ public class App
     	char c;
     	double d;
     	int i, dataSize, bitNo, objectSize;
-    	StringBuilder str, str2;
+    	String str, str2;
     	byte[] bArray = {};
     	ByteBuffer byteBuffer = ByteBuffer.allocate(8);
     	ByteBuffer byteBuffer2 = ByteBuffer.allocate(8);
@@ -85,21 +97,19 @@ public class App
     		dataSize=byteBuffer.order(ByteOrder.LITTLE_ENDIAN).getInt();
     		
     		
+System.out.println("Data size: "+dataSize);
 
     		
     		for(i=0;i<5;i++) {
     			
-    			str = new StringBuilder();
-    			do {
-        			c=(char) fileStream.readByte();
-        			str.append(c);
-        		}while(c!='\u0000'); 
-    			str.deleteCharAt(str.length()-1);
+    			str = App.readStringFromFile(fileStream);
     			
     			
+System.out.printf(str+"\t");
 
 			c=(char) fileStream.readByte();
 
+System.out.printf(c+"\t");
 		
 			bitNo=-10;
 			for(Map.Entry<Character, Integer> entry : dataTypes.entrySet()) {
@@ -108,19 +118,15 @@ public class App
 			}
 			if(bitNo==-10) throw new IllegalArgumentException("Unknown data type");
 
+System.out.printf(bitNo+"\n");			
 
 
 			if(bitNo>0) {
 				bArray=fileStream.readNBytes(bitNo);
 			}
 			else if(bitNo==0) {
-				str2 = new StringBuilder();
-				do {
-					c=(char) fileStream.readByte();
-					str2.append(c);
-				}while(c!='\u0000'); 
-				str2.deleteCharAt(str2.length()-1);
-				bArray=str2.toString().getBytes("US-ASCII");
+				str2 = App.readStringFromFile(fileStream);
+				bArray=str2.getBytes("US-ASCII");
 			}
 			else if(bitNo==-1) {
 				do {
