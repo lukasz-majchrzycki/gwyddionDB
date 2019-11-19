@@ -44,13 +44,28 @@ public class App
     
     
     public static List<AfmImage> readAfmFile (File file) throws IOException {
+    	char[] header = {'G','W','Y','P',
+    			'G', 'w', 'y', 'C', 'o', 'n', 't', 'a', 'i', 'n', 'e', 'r', '\u0000'};
+    	
     	
     	ArrayList<AfmImage> afmImages = new ArrayList<AfmImage>();
     	DataInputStream fileStream =null;
+    	char c;
+    	int i, dataSize, bitNo, objectSize;
+    	StringBuilder str, str2;
     	
     	
     	try {
     		fileStream = new DataInputStream(new FileInputStream(file));
+    		for(i=0;i<17;i++) {
+    			c=(char) fileStream.readByte();
+    			if(c!=header[i]) throw new IllegalArgumentException("Not a Gwyddion file!");
+    		}  		
+    		
+    		byteBuffer.put(fileStream.readNBytes(4));
+    		byteBuffer.rewind();
+    		dataSize=byteBuffer.order(ByteOrder.LITTLE_ENDIAN).getInt();
+    		
     		
     		
     	}
