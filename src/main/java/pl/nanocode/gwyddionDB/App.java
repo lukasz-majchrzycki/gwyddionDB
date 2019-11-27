@@ -63,12 +63,19 @@ public class App
     private static void readContainer(DataInputStream fileStream, int index) throws IOException {
     	String str, str2;
     	char c;
-    	int bitNo, objectSize;
+    	int bitNo, objectSize, slashPos;
     	ByteBuffer byteBuffer = ByteBuffer.allocate(8);
     	byte[] bArray = {};
     	
 		
-		str = App.readStringFromFile(fileStream);  
+		str = App.readStringFromFile(fileStream); 
+		
+		if(index==-1)
+		{
+			slashPos=str.indexOf("/", 1);
+			index=Integer.parseInt(str.substring(1, slashPos));
+		}
+		
 		c=(char) fileStream.readByte();
 
 		bitNo=-10;
@@ -85,7 +92,6 @@ System.out.printf(str+"\t"+c+"\t"+bitNo+"\n");
 		for(Map.Entry<Pattern, ArrayList<Double>> entry: App.imageDoubleData.entrySet()) {
 			while(index>=entry.getValue().size()) {
 				entry.getValue().add(null);
-				System.out.println("Extends Double");
 			}
 		}
 		
@@ -201,7 +207,7 @@ System.out.println("Data size: "+dataSize);
 
     		
     		for(i=0;i<20;i++) {
-    			App.readContainer(fileStream, 0);
+    			App.readContainer(fileStream, -1);
     		}
     		
     	}
