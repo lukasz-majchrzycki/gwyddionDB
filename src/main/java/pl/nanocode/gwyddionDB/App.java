@@ -21,10 +21,10 @@ import java.util.regex.Pattern;
 public class App 
 {
 	static Map<Character, Integer> dataTypes = new HashMap<>();
-	static Map<Pattern, Double> imageDoubleData = new HashMap<>();
-	static Map<Pattern, Integer> imageIntData = new HashMap<>();
-	static Map<Pattern, String> imageStringData = new HashMap<>();
-	static Map<Pattern, ArrayList<Double>> imageDataArray = new HashMap<>();
+	static Map<Pattern, ArrayList<Double>> imageDoubleData = new HashMap<>();
+	static Map<Pattern, ArrayList<Integer>> imageIntData = new HashMap<>();
+	static Map<Pattern, ArrayList<String>> imageStringData = new HashMap<>();
+	static Map<Pattern, ArrayList<ArrayList<Double>> > imageDataArray = new HashMap<>();
 	
 	public static void main( String[] args ) throws IOException
     {
@@ -60,7 +60,7 @@ public class App
 		return str.toString();
     }
     
-    private static void readContainer(DataInputStream fileStream) throws IOException {
+    private static void readContainer(DataInputStream fileStream, int index) throws IOException {
     	String str, str2;
     	char c;
     	int bitNo, objectSize;
@@ -82,23 +82,48 @@ System.out.printf(str+"\t"+c+"\t"+bitNo+"\n");
 
 		byteBuffer.rewind();
 		
+		for(Map.Entry<Pattern, ArrayList<Double>> entry: App.imageDoubleData.entrySet()) {
+			while(index>=entry.getValue().size()) {
+				entry.getValue().add(null);
+				System.out.println("Extends Double");
+			}
+		}
+		
+		for(Map.Entry<Pattern, ArrayList<Integer>> entry: App.imageIntData.entrySet()) {
+			while(index>=entry.getValue().size()) {
+				entry.getValue().add(null);
+			}
+		}
+		
+		for(Map.Entry<Pattern, ArrayList<String>> entry: App.imageStringData.entrySet()) {
+			while(index>=entry.getValue().size()) {
+				entry.getValue().add(null);
+			}
+		}
+		
+		for(Map.Entry<Pattern, ArrayList<ArrayList<Double>>> entry: App.imageDataArray.entrySet()) {
+			while(index>=entry.getValue().size()) {
+				entry.getValue().add(null);
+			}
+		}
+
 		
 		if(bitNo>0) {
 			bArray=fileStream.readNBytes(bitNo);
 			if(c=='i') {
-				for(Map.Entry<Pattern, Integer> entry: imageIntData.entrySet() ) {
+				for(Map.Entry<Pattern, ArrayList<Integer>> entry: imageIntData.entrySet() ) {
 					Matcher matcher = entry.getKey().matcher(str.toString());
 					if(matcher.matches()) {
-						entry.setValue(byteBuffer.put(bArray)
+						entry.getValue().set(index,byteBuffer.put(bArray)
 						.order(ByteOrder.LITTLE_ENDIAN).rewind().getInt() );
 	 					}
 					}					
 			}
 			else if(c=='d') {
-				for(Map.Entry<Pattern, Double> entry: imageDoubleData.entrySet() ) {
+				for(Map.Entry<Pattern, ArrayList<Double>> entry: imageDoubleData.entrySet() ) {
 					Matcher matcher = entry.getKey().matcher(str.toString());
 					if(matcher.matches()) {
-						entry.setValue(byteBuffer.put(bArray)
+						entry.getValue().set(index,byteBuffer.put(bArray)
 						.order(ByteOrder.LITTLE_ENDIAN).rewind().getDouble() );
 	 					}
 					}				
@@ -106,10 +131,10 @@ System.out.printf(str+"\t"+c+"\t"+bitNo+"\n");
 		}
 		else if(bitNo==0) {
 			str2 = App.readStringFromFile(fileStream);
-			for(Map.Entry<Pattern, String> entry: imageStringData.entrySet() ) {
+			for(Map.Entry<Pattern, ArrayList<String>> entry: imageStringData.entrySet() ) {
 				Matcher matcher = entry.getKey().matcher(str.toString());
 				if(matcher.matches()) {
-					entry.setValue(str2);
+					entry.getValue().set(index,str2);
  					}
 				}
 		}
@@ -127,8 +152,7 @@ System.out.println("Object size: " + objectSize);
 			
 		}	
 	
-
-		}
+	}
     
     
     
@@ -145,14 +169,14 @@ System.out.println("Object size: " + objectSize);
     	dataTypes.put('o', -1);
     	
     		
-    	imageDoubleData.put(Pattern.compile("/[0-9]*/base/min"), null  );
-    	imageDoubleData.put(Pattern.compile("/[0-9]*/base/max"), null  );
+    	imageDoubleData.put(Pattern.compile("/[0-9]*/base/min"), new ArrayList<>()  );
+    	imageDoubleData.put(Pattern.compile("/[0-9]*/base/max"), new ArrayList<>()  );
     	   	
-    	imageIntData.put(Pattern.compile("/[0-9]*/base/range-type"), null  );
+    	imageIntData.put(Pattern.compile("/[0-9]*/base/range-type"), new ArrayList<>()  );
     	    	
-    	imageStringData.put(Pattern.compile("/[0-9]*/data/title"), null  );
+    	imageStringData.put(Pattern.compile("/[0-9]*/data/title"), new ArrayList<>()  );
     	    	
-    	imageDataArray.put(Pattern.compile("/[0-9]*/data"), null  );
+    	imageDataArray.put(Pattern.compile("/[0-9]*/data"), new ArrayList<>()  );
     	
     	ArrayList<AfmImage> afmImages = new ArrayList<AfmImage>();
     	DataInputStream fileStream =null;
@@ -176,8 +200,8 @@ System.out.println("Object size: " + objectSize);
 System.out.println("Data size: "+dataSize);
 
     		
-    		for(i=0;i<5;i++) {
-    			App.readContainer(fileStream);
+    		for(i=0;i<20;i++) {
+    			App.readContainer(fileStream, 0);
     		}
     		
     	}
