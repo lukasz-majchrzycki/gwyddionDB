@@ -63,9 +63,10 @@ public class App
     private static int readContainer(DataInputStream fileStream, int index, int size) throws IOException {
     	String str, str2;
     	char c;
-    	int bitNo, objectSize, slashPos, posCount=0, dataCount;
+    	int bitNo, objectSize, slashPos, posCount=0, dataCount, arraySize;
     	ByteBuffer byteBuffer = ByteBuffer.allocate(8);
     	byte[] bArray = {};
+    	boolean upperCase=false;
     	
 		
 		str = App.readStringFromFile(fileStream); 
@@ -92,6 +93,18 @@ public class App
 			if(entry.getKey()==c) 
 				bitNo=entry.getValue();
 		}
+		if(bitNo==-10) {
+			if(Character.isUpperCase(c) )
+			{
+				c=Character.toLowerCase(c);
+				upperCase=true;
+				for(Map.Entry<Character, Integer> entry : dataTypes.entrySet()) {
+					if(entry.getKey()==c) 
+						bitNo=entry.getValue();
+				}
+				
+			}
+		}
 		if(bitNo==-10) throw new IllegalArgumentException("Unknown data type");
 
 System.out.printf(str+"\t"+c+"\t"+bitNo+"\n");			
@@ -117,12 +130,27 @@ System.out.printf(str+"\t"+c+"\t"+bitNo+"\n");
 		}
 		
 		for(Map.Entry<Pattern, ArrayList<ArrayList<Double>>> entry: App.imageDataArray.entrySet()) {
+		/*	for(ArrayList<Double> list : entry.getValue())
+			{
+				while(index>=list.size())
+					list.add(null);
+			}*/
 			while(index>=entry.getValue().size()) {
-				entry.getValue().add(null);
+				entry.getValue().add(new ArrayList<>());
 			}
 		}
 
+		if(upperCase) {
+			byteBuffer.put(fileStream.readNBytes(4));
+			posCount+=4;
+			byteBuffer.rewind();
+			arraySize=byteBuffer.order(ByteOrder.LITTLE_ENDIAN).getInt();
+		} else arraySize=1;
 		
+					
+		for(int i=0;i<arraySize;i++)
+		{	
+			byteBuffer.rewind();
 		if(bitNo>0) {
 			bArray=fileStream.readNBytes(bitNo);
 			posCount+=bitNo;
@@ -135,7 +163,7 @@ System.out.printf(str+"\t"+c+"\t"+bitNo+"\n");
 	 					}
 					}					
 			}
-			else if(c=='d') {
+			else if(c=='d' && !upperCase) {
 				for(Map.Entry<Pattern, ArrayList<Double>> entry: imageDoubleData.entrySet() ) {
 					Matcher matcher = entry.getKey().matcher(str.toString());
 					if(matcher.matches()) {
@@ -144,6 +172,17 @@ System.out.printf(str+"\t"+c+"\t"+bitNo+"\n");
 	 					}
 					}				
 			}
+			else if(c=='d' && upperCase) {
+				for(Map.Entry<Pattern, ArrayList<ArrayList<Double>> > entry: imageDataArray.entrySet() ) {
+					Matcher matcher = entry.getKey().matcher(str.toString());
+					if(matcher.matches()) {
+						entry.getValue().get(index).
+						add(byteBuffer.put(bArray)
+						.order(ByteOrder.LITTLE_ENDIAN).rewind().getDouble() );
+	 					}
+					}				
+			}
+			
 		}
 		else if(bitNo==0) {
 			str2 = App.readStringFromFile(fileStream);
@@ -178,6 +217,7 @@ System.out.println("Object size: " + objectSize);
 
 			
 		}	
+    	}
 		return posCount;
 	}
     
@@ -204,6 +244,7 @@ System.out.println("Object size: " + objectSize);
     	imageStringData.put(Pattern.compile("/[0-9]*/data/title"), new ArrayList<>()  );
     	    	
     	imageDataArray.put(Pattern.compile("/[0-9]*/data"), new ArrayList<>()  );
+    	imageDataArray.put(Pattern.compile("data"), new ArrayList<>()  );
     	
     	ArrayList<AfmImage> afmImages = new ArrayList<AfmImage>();
     	DataInputStream fileStream =null;
