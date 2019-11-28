@@ -60,23 +60,32 @@ public class App
 		return str.toString();
     }
     
-    private static void readContainer(DataInputStream fileStream, int index) throws IOException {
+    private static int readContainer(DataInputStream fileStream, int index, int size) throws IOException {
     	String str, str2;
     	char c;
-    	int bitNo, objectSize, slashPos;
+    	int bitNo, objectSize, slashPos, posCount=0;
     	ByteBuffer byteBuffer = ByteBuffer.allocate(8);
     	byte[] bArray = {};
     	
 		
 		str = App.readStringFromFile(fileStream); 
+		posCount+=str.length()+1;
 		
 		if(index==-1)
 		{
 			slashPos=str.indexOf("/", 1);
-			index=Integer.parseInt(str.substring(1, slashPos));
+			if(slashPos>1) {
+				try {
+					index=Integer.parseInt(str.substring(1, slashPos));
+				} catch(NumberFormatException e) {
+					index=-1;
+				}
+				
+			}
 		}
 		
 		c=(char) fileStream.readByte();
+		posCount++;
 
 		bitNo=-10;
 		for(Map.Entry<Character, Integer> entry : dataTypes.entrySet()) {
@@ -116,6 +125,7 @@ System.out.printf(str+"\t"+c+"\t"+bitNo+"\n");
 		
 		if(bitNo>0) {
 			bArray=fileStream.readNBytes(bitNo);
+			posCount+=bitNo;
 			if(c=='i') {
 				for(Map.Entry<Pattern, ArrayList<Integer>> entry: imageIntData.entrySet() ) {
 					Matcher matcher = entry.getKey().matcher(str.toString());
@@ -137,6 +147,7 @@ System.out.printf(str+"\t"+c+"\t"+bitNo+"\n");
 		}
 		else if(bitNo==0) {
 			str2 = App.readStringFromFile(fileStream);
+			posCount+=str2.length()+1;	
 			for(Map.Entry<Pattern, ArrayList<String>> entry: imageStringData.entrySet() ) {
 				Matcher matcher = entry.getKey().matcher(str.toString());
 				if(matcher.matches()) {
@@ -147,17 +158,21 @@ System.out.printf(str+"\t"+c+"\t"+bitNo+"\n");
 		else if(bitNo==-1) {
 			do {
 				c=(char) fileStream.readByte();
+				posCount++;
 				
 			}while(c!='\u0000'); 
 			byteBuffer.put(fileStream.readNBytes(4));
+			posCount+=4;
 			byteBuffer.rewind();
 			objectSize=byteBuffer.order(ByteOrder.LITTLE_ENDIAN).getInt();
 			
 			fileStream.readNBytes(objectSize);
+			posCount+=objectSize;
 System.out.println("Object size: " + objectSize);
+
 			
 		}	
-	
+		return posCount;
 	}
     
     
@@ -187,7 +202,7 @@ System.out.println("Object size: " + objectSize);
     	ArrayList<AfmImage> afmImages = new ArrayList<AfmImage>();
     	DataInputStream fileStream =null;
     	char c;
-    	int i, dataSize;
+    	int i, dataSize, dataCount;
     	ByteBuffer byteBuffer = ByteBuffer.allocate(8);
     	
     	
@@ -205,10 +220,10 @@ System.out.println("Object size: " + objectSize);
     		
 System.out.println("Data size: "+dataSize);
 
-    		
-    		for(i=0;i<20;i++) {
-    			App.readContainer(fileStream, -1);
-    		}
+    		dataCount=0;
+    		do {
+    			dataCount+= App.readContainer(fileStream, -1,dataSize);
+    		} while(dataCount<dataSize);
     		
     	}
     	finally
