@@ -63,7 +63,7 @@ public class App
     private static int readContainer(DataInputStream fileStream, int index, int size) throws IOException {
     	String str, str2;
     	char c;
-    	int bitNo, objectSize, slashPos, posCount=0;
+    	int bitNo, objectSize, slashPos, posCount=0, dataCount;
     	ByteBuffer byteBuffer = ByteBuffer.allocate(8);
     	byte[] bArray = {};
     	
@@ -166,7 +166,13 @@ System.out.printf(str+"\t"+c+"\t"+bitNo+"\n");
 			byteBuffer.rewind();
 			objectSize=byteBuffer.order(ByteOrder.LITTLE_ENDIAN).getInt();
 			
-			fileStream.readNBytes(objectSize);
+			//fileStream.readNBytes(objectSize);
+			
+    		dataCount=0;
+    		do {
+    			dataCount+= App.readContainer(fileStream, index,objectSize);
+    		} while(dataCount<objectSize);
+			
 			posCount+=objectSize;
 System.out.println("Object size: " + objectSize);
 
