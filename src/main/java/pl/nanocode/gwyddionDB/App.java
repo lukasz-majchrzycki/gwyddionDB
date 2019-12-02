@@ -24,6 +24,7 @@ public class App
 	static Map<Pattern, ArrayList<Double>> imageDoubleData = new HashMap<>();
 	static Map<Pattern, ArrayList<Integer>> imageIntData = new HashMap<>();
 	static Map<Pattern, ArrayList<String>> imageStringData = new HashMap<>();
+	static Map<Pattern, ArrayList<String>> imageStringData2 = new HashMap<>();
 	static Map<Pattern, ArrayList<ArrayList<Double>> > imageDataArray = new HashMap<>();
 	
 	public static void main( String[] args ) throws IOException
@@ -129,6 +130,11 @@ System.out.printf(str+"\t"+c+"\t"+bitNo+"\n");
 			}
 		}
 		
+		for(Map.Entry<Pattern, ArrayList<String>> entry: App.imageStringData2.entrySet()) {
+			while(index>=entry.getValue().size()) {
+				entry.getValue().add(null);
+			}
+		}
 		for(Map.Entry<Pattern, ArrayList<ArrayList<Double>>> entry: App.imageDataArray.entrySet()) {
 		/*	for(ArrayList<Double> list : entry.getValue())
 			{
@@ -195,28 +201,45 @@ System.out.printf(str+"\t"+c+"\t"+bitNo+"\n");
 				}
 		}
 		else if(bitNo==-1) {
-			do {
-				c=(char) fileStream.readByte();
-				posCount++;
-				
-			}while(c!='\u0000'); 
+			str2=App.readStringFromFile(fileStream);
+			posCount+=str2.length()+1;
+			
 			byteBuffer.put(fileStream.readNBytes(4));
 			posCount+=4;
 			byteBuffer.rewind();
 			objectSize=byteBuffer.order(ByteOrder.LITTLE_ENDIAN).getInt();
 			
-			//fileStream.readNBytes(objectSize);
+			if(str2.equals("GwySIUnit") ) {
+				posCount+=App.readStringFromFile(fileStream).length()+1;
+				
+				c=(char) fileStream.readByte();
+				posCount++;
+				
+				str2=App.readStringFromFile(fileStream);
+				posCount+=str2.length()+1;
+				
+				for(Map.Entry<Pattern, ArrayList<String>> entry: imageStringData2.entrySet() ) {
+					Matcher matcher = entry.getKey().matcher(str.toString());
+					if(matcher.matches()) {
+						entry.getValue().set(index,str2);
+	 					}
+					}
+			}else {
 			
-    		dataCount=0;
-    		do {
-    			dataCount+= App.readContainer(fileStream, index,objectSize);
-    		} while(dataCount<objectSize);
-			
-			posCount+=objectSize;
-System.out.println("Object size: " + objectSize);
+				//fileStream.readNBytes(objectSize);
+				
+	    		dataCount=0;
+	    		do {
+	    			dataCount+= App.readContainer(fileStream, index,objectSize);
+	    		} while(dataCount<objectSize);
+				
+				posCount+=objectSize;
+	System.out.println("Object size: " + objectSize);
 
-			
-		}	
+				
+			}
+			}
+	
     	}
 		return posCount;
 	}
@@ -238,10 +261,16 @@ System.out.println("Object size: " + objectSize);
     		
     	imageDoubleData.put(Pattern.compile("/[0-9]*/base/min"), new ArrayList<>()  );
     	imageDoubleData.put(Pattern.compile("/[0-9]*/base/max"), new ArrayList<>()  );
+    	imageDoubleData.put(Pattern.compile("xreal"), new ArrayList<>()  );
+    	imageDoubleData.put(Pattern.compile("yreal"), new ArrayList<>()  );
     	   	
     	imageIntData.put(Pattern.compile("/[0-9]*/base/range-type"), new ArrayList<>()  );
+    	imageIntData.put(Pattern.compile("xres"), new ArrayList<>()  );
+    	imageIntData.put(Pattern.compile("yres"), new ArrayList<>()  );
     	    	
     	imageStringData.put(Pattern.compile("/[0-9]*/data/title"), new ArrayList<>()  );
+    	imageStringData2.put(Pattern.compile("si_unit_xy"), new ArrayList<>()  );
+    	imageStringData2.put(Pattern.compile("si_unit_z"), new ArrayList<>()  );
     	    	
     	imageDataArray.put(Pattern.compile("/[0-9]*/data"), new ArrayList<>()  );
     	imageDataArray.put(Pattern.compile("data"), new ArrayList<>()  );
