@@ -24,8 +24,8 @@ public class App
 	public static void main( String[] args ) throws IOException
     {
     	App main=new App();
-       	File file = main.getFileFromResources("test-log.gwy");
-       	List<AfmImage> afmImageList = readAfmFile(file);  	
+       	File file = main.getFileFromResources("8px.gwy");
+       	List<AfmImage> afmImageList = new GwyddionReader().readAfmFile(file);  	
     	
     }
     

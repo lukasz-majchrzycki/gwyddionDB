@@ -15,14 +15,14 @@ import java.util.regex.Pattern;
 
 public class GwyddionReader {
 	
-	static Map<Character, Integer> dataTypes = new HashMap<>();
-	static Map<Pattern, ArrayList<Double>> imageDoubleData = new HashMap<>();
-	static Map<Pattern, ArrayList<Integer>> imageIntData = new HashMap<>();
-	static Map<Pattern, ArrayList<String>> imageStringData = new HashMap<>();
-	static Map<Pattern, ArrayList<String>> imageStringData2 = new HashMap<>();
-	static Map<Pattern, ArrayList<ArrayList<Double>> > imageDataArray = new HashMap<>();
+	Map<Character, Integer> dataTypes = new HashMap<>();
+	Map<Pattern, ArrayList<Double>> imageDoubleData = new HashMap<>();
+	Map<Pattern, ArrayList<Integer>> imageIntData = new HashMap<>();
+	Map<Pattern, ArrayList<String>> imageStringData = new HashMap<>();
+	Map<Pattern, ArrayList<String>> imageStringData2 = new HashMap<>();
+	Map<Pattern, ArrayList<ArrayList<Double>> > imageDataArray = new HashMap<>();
 	
-	   private static String readStringFromFile (DataInputStream fileStream) throws IOException {
+	   private String readStringFromFile (DataInputStream fileStream) throws IOException {
 			StringBuilder str = new StringBuilder();
 			char c;
 			do {
@@ -34,7 +34,7 @@ public class GwyddionReader {
 			return str.toString();
 	    }
 	    
-	    private static int readContainer(DataInputStream fileStream, int index, int size) throws IOException {
+	    private int readContainer(DataInputStream fileStream, int index, int size) throws IOException {
 	    	String str, str2;
 	    	char c;
 	    	int bitNo, objectSize, slashPos, posCount=0, dataCount, arraySize;
@@ -219,7 +219,7 @@ public class GwyddionReader {
 	    
 	    
 	    
-	    public static List<AfmImage> readAfmFile (File file) throws IOException {
+	    public List<AfmImage> readAfmFile (File file) throws IOException {
 	    	char[] header = {'G','W','Y','P',
 	    			'G', 'w', 'y', 'C', 'o', 'n', 't', 'a', 'i', 'n', 'e', 'r', '\u0000'};
 	    	
