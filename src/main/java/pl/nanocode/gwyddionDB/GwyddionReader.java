@@ -22,6 +22,8 @@ public class GwyddionReader {
 	Map<Pattern, ArrayList<String>> imageStringData2 = new HashMap<>();
 	Map<Pattern, ArrayList<ArrayList<Double>> > imageDataArray = new HashMap<>();
 	
+	ByteBuffer byteBuffer;
+	
 	   private String readStringFromFile (DataInputStream fileStream) throws IOException {
 			StringBuilder str = new StringBuilder();
 			char c;
@@ -33,7 +35,43 @@ public class GwyddionReader {
 			
 			return str.toString();
 	    }
-	    
+	   
+	   private int readIntFromFile (DataInputStream fileStream) throws IOException{
+			byteBuffer.rewind();
+			byteBuffer.put(fileStream.readNBytes(4));
+			byteBuffer.rewind();
+			return byteBuffer.order(ByteOrder.LITTLE_ENDIAN).getInt();
+	   }
+	   
+	   private int getBitNo (char c) {
+			for(Map.Entry<Character, Integer> entry : dataTypes.entrySet()) {
+				if(entry.getKey()==c) 
+					return entry.getValue();
+			}
+			return -10;
+	   }
+	   
+	   @SuppressWarnings("unchecked")
+	   private <E >void extendMapList (Map<Pattern, ArrayList<E>> map, int index, boolean newArrayList) {
+			for(Map.Entry<Pattern, ArrayList<E>> entry:  map.entrySet()) {
+				while(index>=entry.getValue().size()) {
+						entry.getValue().add((E) ( newArrayList ? (new ArrayList<>() ) : null)  );
+				}
+			}
+	   }
+	   
+	   private int getInt(byte[] bArray) {
+		   byteBuffer.rewind();
+		   return byteBuffer.put(bArray)
+			.order(ByteOrder.LITTLE_ENDIAN).rewind().getInt() ;
+	   }
+	   
+	   private double getDouble(byte[] bArray) {
+		   byteBuffer.rewind();
+		   return byteBuffer.put(bArray)
+			.order(ByteOrder.LITTLE_ENDIAN).rewind().getDouble() ;
+	   }
+	       
 	    private int readContainer(DataInputStream fileStream, int index, int size) throws IOException {
 	    	String str, str2;
 	    	char c;
@@ -41,7 +79,6 @@ public class GwyddionReader {
 	    	ByteBuffer byteBuffer = ByteBuffer.allocate(8);
 	    	byte[] bArray = {};
 	    	boolean upperCase=false;
-	    	
 			
 			str = readStringFromFile(fileStream); 
 			posCount+=str.length()+1;
@@ -62,74 +99,33 @@ public class GwyddionReader {
 			c=(char) fileStream.readByte();
 			posCount++;
 
-			bitNo=-10;
-			for(Map.Entry<Character, Integer> entry : dataTypes.entrySet()) {
-				if(entry.getKey()==c) 
-					bitNo=entry.getValue();
-			}
-			if(bitNo==-10) {
-				if(Character.isUpperCase(c) )
-				{
+			bitNo=getBitNo(c);
+			
+			if(bitNo==-10 && Character.isUpperCase(c)) {
 					c=Character.toLowerCase(c);
 					upperCase=true;
-					for(Map.Entry<Character, Integer> entry : dataTypes.entrySet()) {
-						if(entry.getKey()==c) 
-							bitNo=entry.getValue();
-					}
-					
-				}
+					bitNo=getBitNo(c);					
 			}
 			if(bitNo==-10) throw new IllegalArgumentException("Unknown data type");
 
 	System.out.printf(str+"\t"+c+"\t"+bitNo+"\n");			
-
-			byteBuffer.rewind();
-			
-			for(Map.Entry<Pattern, ArrayList<Double>> entry: imageDoubleData.entrySet()) {
-				while(index>=entry.getValue().size()) {
-					entry.getValue().add(null);
-				}
-			}
-			
-			for(Map.Entry<Pattern, ArrayList<Integer>> entry: imageIntData.entrySet()) {
-				while(index>=entry.getValue().size()) {
-					entry.getValue().add(null);
-				}
-			}
-			
-			for(Map.Entry<Pattern, ArrayList<String>> entry: imageStringData.entrySet()) {
-				while(index>=entry.getValue().size()) {
-					entry.getValue().add(null);
-				}
-			}
-			
-			for(Map.Entry<Pattern, ArrayList<String>> entry: imageStringData2.entrySet()) {
-				while(index>=entry.getValue().size()) {
-					entry.getValue().add(null);
-				}
-			}
-			for(Map.Entry<Pattern, ArrayList<ArrayList<Double>>> entry: imageDataArray.entrySet()) {
-			/*	for(ArrayList<Double> list : entry.getValue())
-				{
-					while(index>=list.size())
-						list.add(null);
-				}*/
-				while(index>=entry.getValue().size()) {
-					entry.getValue().add(new ArrayList<>());
-				}
-			}
-
+	
+			this.extendMapList(imageDoubleData, index, false);
+			this.extendMapList(imageIntData, index, false);
+			this.extendMapList(imageStringData, index, false);
+			this.extendMapList(imageStringData2, index, false);	
+			this.extendMapList(imageDataArray, index, true);
+						
 			if(upperCase) {
-				byteBuffer.put(fileStream.readNBytes(4));
+				arraySize=this.readIntFromFile(fileStream);
 				posCount+=4;
-				byteBuffer.rewind();
-				arraySize=byteBuffer.order(ByteOrder.LITTLE_ENDIAN).getInt();
+				
 			} else arraySize=1;
 			
 						
 			for(int i=0;i<arraySize;i++)
 			{	
-				byteBuffer.rewind();
+			byteBuffer.rewind();
 			if(bitNo>0) {
 				bArray=fileStream.readNBytes(bitNo);
 				posCount+=bitNo;
@@ -137,8 +133,7 @@ public class GwyddionReader {
 					for(Map.Entry<Pattern, ArrayList<Integer>> entry: imageIntData.entrySet() ) {
 						Matcher matcher = entry.getKey().matcher(str.toString());
 						if(matcher.matches()) {
-							entry.getValue().set(index,byteBuffer.put(bArray)
-							.order(ByteOrder.LITTLE_ENDIAN).rewind().getInt() );
+							entry.getValue().set(index,this.getInt(bArray) );
 		 					}
 						}					
 				}
@@ -146,8 +141,7 @@ public class GwyddionReader {
 					for(Map.Entry<Pattern, ArrayList<Double>> entry: imageDoubleData.entrySet() ) {
 						Matcher matcher = entry.getKey().matcher(str.toString());
 						if(matcher.matches()) {
-							entry.getValue().set(index,byteBuffer.put(bArray)
-							.order(ByteOrder.LITTLE_ENDIAN).rewind().getDouble() );
+							entry.getValue().set(index,this.getDouble(bArray)  );
 		 					}
 						}				
 				}
@@ -155,9 +149,7 @@ public class GwyddionReader {
 					for(Map.Entry<Pattern, ArrayList<ArrayList<Double>> > entry: imageDataArray.entrySet() ) {
 						Matcher matcher = entry.getKey().matcher(str.toString());
 						if(matcher.matches()) {
-							entry.getValue().get(index).
-							add(byteBuffer.put(bArray)
-							.order(ByteOrder.LITTLE_ENDIAN).rewind().getDouble() );
+							entry.getValue().get(index).add(this.getDouble(bArray) );
 		 					}
 						}				
 				}
@@ -177,10 +169,8 @@ public class GwyddionReader {
 				str2=readStringFromFile(fileStream);
 				posCount+=str2.length()+1;
 				
-				byteBuffer.put(fileStream.readNBytes(4));
+				objectSize=this.readIntFromFile(fileStream);
 				posCount+=4;
-				byteBuffer.rewind();
-				objectSize=byteBuffer.order(ByteOrder.LITTLE_ENDIAN).getInt();
 				
 				if(str2.equals("GwySIUnit") ) {
 					posCount+=readStringFromFile(fileStream).length()+1;
@@ -197,10 +187,7 @@ public class GwyddionReader {
 							entry.getValue().set(index,str2);
 		 					}
 						}
-				}else {
-				
-					//fileStream.readNBytes(objectSize);
-					
+				}else {			
 		    		dataCount=0;
 		    		do {
 		    			dataCount+= readContainer(fileStream, index,objectSize);
@@ -252,7 +239,7 @@ public class GwyddionReader {
 	    	DataInputStream fileStream =null;
 	    	char c;
 	    	int i, dataSize, dataCount;
-	    	ByteBuffer byteBuffer = ByteBuffer.allocate(8);
+	    	byteBuffer = ByteBuffer.allocate(8);
 	    	
 	    	
 	    	try {
@@ -262,9 +249,7 @@ public class GwyddionReader {
 	    			if(c!=header[i]) throw new IllegalArgumentException("Not a Gwyddion file!");
 	    		}  		
 	    		
-	    		byteBuffer.put(fileStream.readNBytes(4));
-	    		byteBuffer.rewind();
-	    		dataSize=byteBuffer.order(ByteOrder.LITTLE_ENDIAN).getInt();
+	    		dataSize=this.readIntFromFile(fileStream);
 	    		
 	    		
 	System.out.println("Data size: "+dataSize);
