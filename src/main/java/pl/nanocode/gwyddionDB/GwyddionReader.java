@@ -60,6 +60,26 @@ public class GwyddionReader {
 			}
 	   }
 	   
+	   private <E> void addToMap (Map<Pattern, ArrayList<E>> map, E value,int index, String fieldName){
+			for(Map.Entry<Pattern, ArrayList<E>> entry: map.entrySet() ) {
+				Matcher matcher = entry.getKey().matcher(fieldName);
+				if(matcher.matches()) {
+					entry.getValue().set(index,value );
+					
+ 				}
+			}
+	   }
+	   
+	   private <E> void addArrayFieldToMap (Map<Pattern, ArrayList<ArrayList<E>> > map, E value,int index, String fieldName){
+			for(Map.Entry<Pattern, ArrayList<ArrayList<E>> > entry: map.entrySet() ) {
+				Matcher matcher = entry.getKey().matcher(fieldName);
+				if(matcher.matches()) {
+					entry.getValue().get(index).add(value);
+					
+				}
+			}
+	   }
+	   
 	   private int getInt(byte[] bArray) {
 		   byteBuffer.rewind();
 		   return byteBuffer.put(bArray)
@@ -130,40 +150,20 @@ public class GwyddionReader {
 				bArray=fileStream.readNBytes(bitNo);
 				posCount+=bitNo;
 				if(c=='i') {
-					for(Map.Entry<Pattern, ArrayList<Integer>> entry: imageIntData.entrySet() ) {
-						Matcher matcher = entry.getKey().matcher(str.toString());
-						if(matcher.matches()) {
-							entry.getValue().set(index,this.getInt(bArray) );
-		 					}
-						}					
+					this.addToMap(imageIntData, this.getInt(bArray), index, str);				
 				}
 				else if(c=='d' && !upperCase) {
-					for(Map.Entry<Pattern, ArrayList<Double>> entry: imageDoubleData.entrySet() ) {
-						Matcher matcher = entry.getKey().matcher(str.toString());
-						if(matcher.matches()) {
-							entry.getValue().set(index,this.getDouble(bArray)  );
-		 					}
-						}				
+					this.addToMap(imageDoubleData, this.getDouble(bArray), index, str);	
 				}
 				else if(c=='d' && upperCase) {
-					for(Map.Entry<Pattern, ArrayList<ArrayList<Double>> > entry: imageDataArray.entrySet() ) {
-						Matcher matcher = entry.getKey().matcher(str.toString());
-						if(matcher.matches()) {
-							entry.getValue().get(index).add(this.getDouble(bArray) );
-		 					}
-						}				
+					this.addArrayFieldToMap(imageDataArray, this.getDouble(bArray), index, str);
 				}
 				
 			}
 			else if(bitNo==0) {
 				str2 = readStringFromFile(fileStream);
-				posCount+=str2.length()+1;	
-				for(Map.Entry<Pattern, ArrayList<String>> entry: imageStringData.entrySet() ) {
-					Matcher matcher = entry.getKey().matcher(str.toString());
-					if(matcher.matches()) {
-						entry.getValue().set(index,str2);
-	 					}
-					}
+				posCount+=str2.length()+1;
+				this.addToMap(imageStringData, str2, index, str);
 			}
 			else if(bitNo==-1) {
 				str2=readStringFromFile(fileStream);
@@ -181,12 +181,7 @@ public class GwyddionReader {
 					str2=readStringFromFile(fileStream);
 					posCount+=str2.length()+1;
 					
-					for(Map.Entry<Pattern, ArrayList<String>> entry: imageStringData2.entrySet() ) {
-						Matcher matcher = entry.getKey().matcher(str.toString());
-						if(matcher.matches()) {
-							entry.getValue().set(index,str2);
-		 					}
-						}
+					this.addToMap(imageStringData2, str2, index, str);
 				}else {			
 		    		dataCount=0;
 		    		do {
