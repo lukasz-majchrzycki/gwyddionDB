@@ -24,7 +24,37 @@ public class GwyddionReader {
 	
 	ByteBuffer byteBuffer;
 	
-	   private String readStringFromFile (DataInputStream fileStream) throws IOException {
+	   public GwyddionReader() {
+		   
+		    dataTypes.put('b', 1);
+	    	dataTypes.put('c', 1);
+	    	dataTypes.put('i', 4);
+	    	dataTypes.put('q', 8);
+	    	dataTypes.put('d', 8);
+	    	dataTypes.put('s', 0);
+	    	dataTypes.put('o', -1);
+	    	
+	    		
+	    	imageDoubleData.put(Pattern.compile("/[0-9]*/base/min"), new ArrayList<>()  );
+	    	imageDoubleData.put(Pattern.compile("/[0-9]*/base/max"), new ArrayList<>()  );
+	    	imageDoubleData.put(Pattern.compile("xreal"), new ArrayList<>()  );
+	    	imageDoubleData.put(Pattern.compile("yreal"), new ArrayList<>()  );
+	    	   	
+	    	imageIntData.put(Pattern.compile("/[0-9]*/base/range-type"), new ArrayList<>()  );
+	    	imageIntData.put(Pattern.compile("xres"), new ArrayList<>()  );
+	    	imageIntData.put(Pattern.compile("yres"), new ArrayList<>()  );
+	    	    	
+	    	imageStringData.put(Pattern.compile("/[0-9]*/data/title"), new ArrayList<>()  );
+	    	imageStringData2.put(Pattern.compile("si_unit_xy"), new ArrayList<>()  );
+	    	imageStringData2.put(Pattern.compile("si_unit_z"), new ArrayList<>()  );
+	    	    	
+	    	imageDataArray.put(Pattern.compile("/[0-9]*/data"), new ArrayList<>()  );
+	    	imageDataArray.put(Pattern.compile("data"), new ArrayList<>()  );
+	    	
+	    	byteBuffer = ByteBuffer.allocate(8);
+	}
+
+	private String readStringFromFile (DataInputStream fileStream) throws IOException {
 			StringBuilder str = new StringBuilder();
 			char c;
 			do {
@@ -205,37 +235,10 @@ public class GwyddionReader {
 	    	char[] header = {'G','W','Y','P',
 	    			'G', 'w', 'y', 'C', 'o', 'n', 't', 'a', 'i', 'n', 'e', 'r', '\u0000'};
 	    	
-	    	dataTypes.put('b', 1);
-	    	dataTypes.put('c', 1);
-	    	dataTypes.put('i', 4);
-	    	dataTypes.put('q', 8);
-	    	dataTypes.put('d', 8);
-	    	dataTypes.put('s', 0);
-	    	dataTypes.put('o', -1);
-	    	
-	    		
-	    	imageDoubleData.put(Pattern.compile("/[0-9]*/base/min"), new ArrayList<>()  );
-	    	imageDoubleData.put(Pattern.compile("/[0-9]*/base/max"), new ArrayList<>()  );
-	    	imageDoubleData.put(Pattern.compile("xreal"), new ArrayList<>()  );
-	    	imageDoubleData.put(Pattern.compile("yreal"), new ArrayList<>()  );
-	    	   	
-	    	imageIntData.put(Pattern.compile("/[0-9]*/base/range-type"), new ArrayList<>()  );
-	    	imageIntData.put(Pattern.compile("xres"), new ArrayList<>()  );
-	    	imageIntData.put(Pattern.compile("yres"), new ArrayList<>()  );
-	    	    	
-	    	imageStringData.put(Pattern.compile("/[0-9]*/data/title"), new ArrayList<>()  );
-	    	imageStringData2.put(Pattern.compile("si_unit_xy"), new ArrayList<>()  );
-	    	imageStringData2.put(Pattern.compile("si_unit_z"), new ArrayList<>()  );
-	    	    	
-	    	imageDataArray.put(Pattern.compile("/[0-9]*/data"), new ArrayList<>()  );
-	    	imageDataArray.put(Pattern.compile("data"), new ArrayList<>()  );
-	    	
 	    	ArrayList<AfmImage> afmImages = new ArrayList<AfmImage>();
 	    	DataInputStream fileStream =null;
 	    	char c;
-	    	int i, dataSize, dataCount;
-	    	byteBuffer = ByteBuffer.allocate(8);
-	    	
+	    	int i, dataSize, dataCount;   	
 	    	
 	    	try {
 	    		fileStream = new DataInputStream(new FileInputStream(file));
