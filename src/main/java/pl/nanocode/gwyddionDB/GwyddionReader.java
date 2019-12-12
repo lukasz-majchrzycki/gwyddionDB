@@ -21,6 +21,7 @@ public class GwyddionReader {
 	Map<Pattern, ArrayList<String>> imageStringData = new HashMap<>();
 	Map<Pattern, ArrayList<String>> imageStringData2 = new HashMap<>();
 	Map<Pattern, ArrayList<ArrayList<Double>> > imageDataArray = new HashMap<>();
+	ArrayList<Pattern> patternList = new ArrayList<>();
 	
 	ByteBuffer byteBuffer;
 	
@@ -33,23 +34,35 @@ public class GwyddionReader {
 	    	dataTypes.put('d', 8);
 	    	dataTypes.put('s', 0);
 	    	dataTypes.put('o', -1);
+
+	    	patternList.add(Pattern.compile("/[0-9]*/base/min"));
+	    	patternList.add(Pattern.compile("/[0-9]*/base/max"));
+	    	patternList.add(Pattern.compile("xreal"));
+	    	patternList.add(Pattern.compile("yreal"));
+	    	patternList.add(Pattern.compile("/[0-9]*/base/range-type"));
+	    	patternList.add(Pattern.compile("xres"));
+	    	patternList.add(Pattern.compile("yres"));
+	    	patternList.add(Pattern.compile("/[0-9]*/data/title"));
+	    	patternList.add(Pattern.compile("si_unit_xy"));
+	    	patternList.add(Pattern.compile("si_unit_z"));
+	    	patternList.add(Pattern.compile("/[0-9]*/data"));
+	    	patternList.add(Pattern.compile("data"));
 	    	
-	    		
-	    	imageDoubleData.put(Pattern.compile("/[0-9]*/base/min"), new ArrayList<>()  );
-	    	imageDoubleData.put(Pattern.compile("/[0-9]*/base/max"), new ArrayList<>()  );
-	    	imageDoubleData.put(Pattern.compile("xreal"), new ArrayList<>()  );
-	    	imageDoubleData.put(Pattern.compile("yreal"), new ArrayList<>()  );
+	    	imageDoubleData.put(patternList.get(0), new ArrayList<>()  );
+	    	imageDoubleData.put(patternList.get(1), new ArrayList<>()  );
+	    	imageDoubleData.put(patternList.get(2), new ArrayList<>()  );
+	    	imageDoubleData.put(patternList.get(3), new ArrayList<>()  );
 	    	   	
-	    	imageIntData.put(Pattern.compile("/[0-9]*/base/range-type"), new ArrayList<>()  );
-	    	imageIntData.put(Pattern.compile("xres"), new ArrayList<>()  );
-	    	imageIntData.put(Pattern.compile("yres"), new ArrayList<>()  );
+	    	imageIntData.put(patternList.get(4), new ArrayList<>()  );
+	    	imageIntData.put(patternList.get(5), new ArrayList<>()  );
+	    	imageIntData.put(patternList.get(6), new ArrayList<>()  );
 	    	    	
-	    	imageStringData.put(Pattern.compile("/[0-9]*/data/title"), new ArrayList<>()  );
-	    	imageStringData2.put(Pattern.compile("si_unit_xy"), new ArrayList<>()  );
-	    	imageStringData2.put(Pattern.compile("si_unit_z"), new ArrayList<>()  );
+	    	imageStringData.put(patternList.get(7), new ArrayList<>()  );
+	    	imageStringData2.put(patternList.get(8), new ArrayList<>()  );
+	    	imageStringData2.put(patternList.get(9), new ArrayList<>()  );
 	    	    	
-	    	imageDataArray.put(Pattern.compile("/[0-9]*/data"), new ArrayList<>()  );
-	    	imageDataArray.put(Pattern.compile("data"), new ArrayList<>()  );
+	    	imageDataArray.put(patternList.get(10), new ArrayList<>()  );
+	    	imageDataArray.put(patternList.get(11), new ArrayList<>()  );
 	    	
 	    	byteBuffer = ByteBuffer.allocate(8);
 	    	byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
