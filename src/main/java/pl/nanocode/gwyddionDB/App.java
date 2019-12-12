@@ -26,7 +26,6 @@ public class App
     	App main=new App();
        	File file = main.getFileFromResources("8px.gwy");
        	List<AfmImage> afmImageList = new GwyddionReader().readAfmFile(file);  	
-    	
     }
     
     

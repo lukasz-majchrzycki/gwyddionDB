@@ -236,7 +236,7 @@ public class GwyddionReader {
 	    	ArrayList<AfmImage> afmImages = new ArrayList<AfmImage>();
 	    	DataInputStream fileStream =null;
 	    	char c;
-	    	int i, dataSize, dataCount;   	
+	    	int i, j, dataSize, dataCount;   	
 	    	
 	    	try {
 	    		fileStream = new DataInputStream(new FileInputStream(file));
@@ -255,7 +255,49 @@ public class GwyddionReader {
 	    	{
 	    		if(fileStream!=null)
 	    			fileStream.close();
-	    	}	    	
+	    	}	
+	    	
+	    	for(i=0, j=0;i<this.imageDataArray.get(patternList.get(11) ).size();i++) {
+	    		if(this.imageDataArray.get(patternList.get(11)).get(i).isEmpty()) {
+	    			continue;
+	    		}
+	    		
+	    		afmImages.add(new AfmImage());
+	    		Double min, max;
+	    		
+	    		min=this.imageDoubleData.get(patternList.get(0)).get(i);
+	    		if(min==null) {
+	    			min=Double.POSITIVE_INFINITY;
+	    			for(Double x: this.imageDataArray.get(patternList.get(11) ).get(i) ) {
+	    				if(x<min)	min=x;
+	    			}
+	    		}
+	    		afmImages.get(j).setMinZ(min);
+	    		
+	    		max=this.imageDoubleData.get(patternList.get(1)).get(i);
+	    		if(max==null) {
+	    			max=Double.NEGATIVE_INFINITY;
+	    			for(Double x: this.imageDataArray.get(patternList.get(11) ).get(i) ) {
+	    				if(x>max)	max=x;
+	    			}
+	    		}
+	    		afmImages.get(j).setMaxZ(max);
+	    		
+	    		afmImages.get(j).setXreal(this.imageDoubleData.get(patternList.get(2)).get(i) );
+	    		afmImages.get(j).setYreal(this.imageDoubleData.get(patternList.get(3)).get(i) );
+	    		
+	    		afmImages.get(j).setXres(this.imageIntData.get(patternList.get(5)).get(i) );
+	    		afmImages.get(j).setYres(this.imageIntData.get(patternList.get(6)).get(i) );
+	    		
+	    		afmImages.get(j).setTitle(this.imageStringData.get(patternList.get(7)).get(i) );
+	    		
+	    		afmImages.get(j).setSi_unit_xy(this.imageStringData2.get(patternList.get(8)).get(i) );
+	    		afmImages.get(j).setSi_unit_z(this.imageStringData2.get(patternList.get(9)).get(i) );
+	    		
+	    		afmImages.get(j).afmMap=this.imageDataArray.get(patternList.get(11)).get(i);
+	    		j++;
+	    		
+	    	}
 	    	return afmImages;
 	    }	
 

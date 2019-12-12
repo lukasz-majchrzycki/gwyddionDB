@@ -48,4 +48,22 @@ public class AfmImage {
 	public int getYres() {
 		return yres;
 	}
+	public void setMinZ(double minZ) {
+		this.minZ = minZ;
+	}
+	public void setMaxZ(double maxZ) {
+		this.maxZ = maxZ;
+	}
+	public void setXreal(double xreal) {
+		this.xreal = xreal;
+	}
+	public void setYreal(double yreal) {
+		this.yreal = yreal;
+	}
+	public void setXres(int xres) {
+		this.xres = xres;
+	}
+	public void setYres(int yres) {
+		this.yres = yres;
+	}	
 }
