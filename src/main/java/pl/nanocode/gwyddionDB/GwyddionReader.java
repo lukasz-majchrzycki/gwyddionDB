@@ -52,6 +52,7 @@ public class GwyddionReader {
 	    	imageDataArray.put(Pattern.compile("data"), new ArrayList<>()  );
 	    	
 	    	byteBuffer = ByteBuffer.allocate(8);
+	    	byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
 	}
 
 	   private String readStringFromFile (DataInputStream fileStream) throws IOException {
@@ -70,7 +71,7 @@ public class GwyddionReader {
 			byteBuffer.rewind();
 			byteBuffer.put(fileStream.readNBytes(4));
 			byteBuffer.rewind();
-			return byteBuffer.order(ByteOrder.LITTLE_ENDIAN).getInt();
+			return byteBuffer.getInt();
 	   }
 	   
 	   private int getBitNo (char c) {
@@ -110,14 +111,12 @@ public class GwyddionReader {
 	   
 	   private int getInt(byte[] bArray) {
 		   byteBuffer.rewind();
-		   return byteBuffer.put(bArray)
-			.order(ByteOrder.LITTLE_ENDIAN).rewind().getInt() ;
+		   return byteBuffer.put(bArray).rewind().getInt() ;
 	   }
 	   
 	   private double getDouble(byte[] bArray) {
 		   byteBuffer.rewind();
-		   return byteBuffer.put(bArray)
-			.order(ByteOrder.LITTLE_ENDIAN).rewind().getDouble() ;
+		   return byteBuffer.put(bArray).rewind().getDouble() ;
 	   }
 	       
 	    private int readContainer(DataInputStream fileStream, int index, int size) throws IOException {
