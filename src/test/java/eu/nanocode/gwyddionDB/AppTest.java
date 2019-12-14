@@ -1,4 +1,4 @@
-package pl.nanocode.gwyddionDB;
+package eu.nanocode.gwyddionDB;
 
 import junit.framework.Test;
 import junit.framework.TestCase;

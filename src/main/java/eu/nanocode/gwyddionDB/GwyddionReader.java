@@ -1,4 +1,4 @@
-package pl.nanocode.gwyddionDB;
+package eu.nanocode.gwyddionDB;
 
 import java.io.DataInputStream;
 import java.io.File;
