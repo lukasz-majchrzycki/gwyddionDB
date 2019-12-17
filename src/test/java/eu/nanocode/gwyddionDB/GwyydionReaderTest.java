@@ -46,31 +46,31 @@ public class GwyydionReaderTest
 		}
        
        	assertEquals(2, afmImageList.size() );
-       	assertEquals("Scaled Data 1", afmImageList.get(1).getTitle());
-       	assertEquals("Detail 2", afmImageList.get(0).getTitle());
+       	assertEquals("Scaled Data 1", afmImageList.get(0).getTitle());
+       	assertEquals("Detail 2", afmImageList.get(1).getTitle());
        	
-       	assertEquals(8, afmImageList.get(1).getXres());		//pixel resolution of images
-       	assertEquals(8, afmImageList.get(1).getYres());
-       	assertEquals(8, afmImageList.get(0).getXres());
-       	assertEquals(4, afmImageList.get(0).getYres());
+       	assertEquals(8, afmImageList.get(0).getXres());		//pixel resolution of images
+       	assertEquals(8, afmImageList.get(0).getYres());
+       	assertEquals(8, afmImageList.get(1).getXres());
+       	assertEquals(4, afmImageList.get(1).getYres());
        	
-       	assertEquals(64,afmImageList.get(1).afmMap.size());
-       	assertEquals(32,afmImageList.get(0).afmMap.size());
+       	assertEquals(64,afmImageList.get(0).afmMap.size());
+       	assertEquals(32,afmImageList.get(1).afmMap.size());
        	
-       	assertEquals(10.0E-6, afmImageList.get(1).getXreal());	//real resolution of images
-       	assertEquals(10.0E-6, afmImageList.get(1).getYreal());
-       	assertEquals(10.0E-6, afmImageList.get(0).getXreal());
-       	assertEquals(5.0E-6, afmImageList.get(0).getYreal());
+       	assertEquals(10.0E-6, afmImageList.get(0).getXreal());	//real resolution of images
+       	assertEquals(10.0E-6, afmImageList.get(0).getYreal());
+       	assertEquals(10.0E-6, afmImageList.get(1).getXreal());
+       	assertEquals(5.0E-6, afmImageList.get(1).getYreal());
        	
-    	assertEquals(0.0, afmImageList.get(1).getMinZ());		//z-scale min and max
-    	assertEquals(4.0000000000000036E-9, afmImageList.get(1).getMaxZ());
-    	assertEquals(5.000000000000004E-10, afmImageList.get(0).getMinZ());
-    	assertEquals(3.000000000000003E-9, afmImageList.get(0).getMaxZ());
+    	assertEquals(0.0, afmImageList.get(0).getMinZ());		//z-scale min and max
+    	assertEquals(4.199999999999975E-9, afmImageList.get(0).getMaxZ());
+    	assertEquals(6.444390992906632E-10, afmImageList.get(1).getMinZ());
+    	assertEquals(2.836869881887839E-9, afmImageList.get(1).getMaxZ());
     	
-    	assertEquals("m", afmImageList.get(1).si_unit_xy);		//xy and z units
-    	assertEquals("m", afmImageList.get(1).si_unit_z);
-    	assertEquals("m", afmImageList.get(0).si_unit_xy);
+    	assertEquals("m", afmImageList.get(0).si_unit_xy);		//xy and z units
     	assertEquals("m", afmImageList.get(0).si_unit_z);
+    	assertEquals("m", afmImageList.get(1).si_unit_xy);
+    	assertEquals("m", afmImageList.get(1).si_unit_z);
     	
     	try {
 			sc = new Scanner(this.getFileFromResources("test_image1.txt"));
@@ -80,7 +80,7 @@ public class GwyydionReaderTest
 		}
     	
     	for(i=0;i<afmImageList.size();i++) {
-    		assertEquals(Double.parseDouble(sc.next() ),afmImageList.get(0).afmMap.get(i));
+    		assertEquals(Double.parseDouble(sc.next() ),afmImageList.get(1).afmMap.get(i));
     	}
     	
     	try {
@@ -91,7 +91,7 @@ public class GwyydionReaderTest
 		}
     	
     	for(i=0;i<afmImageList.size();i++) {
-    		assertEquals(Double.parseDouble(sc.next() ),afmImageList.get(1).afmMap.get(i));
+    		assertEquals(Double.parseDouble(sc.next() ),afmImageList.get(0).afmMap.get(i));
     	}
     }
 }
