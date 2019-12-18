@@ -164,6 +164,9 @@ public class GwyddionReader {
 					upperCase=true;
 					bitNo=getBitNo(c);					
 			}
+			else {
+				upperCase=false;
+			}
 			if(bitNo==-10) throw new IllegalArgumentException("Unknown data type");		
 	
 			this.extendMapList(imageDoubleData, index, false);
@@ -215,13 +218,18 @@ public class GwyddionReader {
 					posCount+=str2.length()+1;
 					
 					this.addToMap(imageStringData2, str2, index, str);
-				}else {			
+				}else if (str2.equals("GwyDataField") )
+				{			
 		    		dataCount=0;
 			    		do {
 			    			dataCount+= readContainer(fileStream, index,objectSize);
 			    		} while(dataCount<objectSize);
 					posCount+=objectSize;	
 					}
+				else {
+					fileStream.readNBytes(objectSize);
+					posCount+=objectSize;
+				}
 				}
 	    	}
 			return posCount;
