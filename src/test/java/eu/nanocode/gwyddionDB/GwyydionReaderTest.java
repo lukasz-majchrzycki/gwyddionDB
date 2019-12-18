@@ -33,6 +33,17 @@ public class GwyydionReaderTest
 	}
 	
 	@Test
+	public void testWrongFileExceptions() {
+		assertThrows(IllegalArgumentException.class, ()->{
+				afmImageList = new GwyddionReader().readAfmFile(this.getFileFromResources("IllegalArgumentException.gwy"));
+		});
+		
+		assertThrows(IllegalArgumentException.class, ()->{
+			afmImageList = new GwyddionReader().readAfmFile(this.getFileFromResources("IllegalArgumentException2.gwy"));
+		});
+	}
+	
+	@Test
     public void readingDataTest()
     {
 		Scanner sc=null;
