@@ -15,5 +15,6 @@
          <property name="current_session_context_class">thread</property>
         <mapping class="eu.nanocode.gwyddionDB.AfmImage"></mapping>
         <mapping class="eu.nanocode.gwyddionDB.ProjectItem"></mapping>
+        <mapping class="eu.nanocode.gwyddionDB.ProjectImageLink"></mapping>
     </session-factory>
 </hibernate-configuration>
