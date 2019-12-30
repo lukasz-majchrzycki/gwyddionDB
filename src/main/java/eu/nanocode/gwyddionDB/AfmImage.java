@@ -20,7 +20,6 @@ public class AfmImage implements Serializable {
 	private static final long serialVersionUID = -1798070786993154676L;
 	
 	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	@Column(name = "IMAGE_ID")
 	private long imageID;
 	
@@ -132,6 +131,10 @@ public class AfmImage implements Serializable {
 	public long getImageID() {
 		return imageID;
 	}
+	
+	protected long generateID() {
+		return this.imageID= this.hashCode();
+	}
 
 	public LocalDateTime getCreationTime() {
 		return creationTime;
@@ -143,4 +146,83 @@ public class AfmImage implements Serializable {
 	public void changeModificationTime() {
 		this.modificationTime = LocalDateTime.now();
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((creationTime == null) ? 0 : creationTime.hashCode());
+		result = prime * result + ((description == null) ? 0 : description.hashCode());
+		long temp;
+		temp = Double.doubleToLongBits(maxZ);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(minZ);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		result = prime * result + ((modificationTime == null) ? 0 : modificationTime.hashCode());
+		result = prime * result + ((si_unit_xy == null) ? 0 : si_unit_xy.hashCode());
+		result = prime * result + ((si_unit_z == null) ? 0 : si_unit_z.hashCode());
+		result = prime * result + ((title == null) ? 0 : title.hashCode());
+		temp = Double.doubleToLongBits(xreal);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		result = prime * result + xres;
+		temp = Double.doubleToLongBits(yreal);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		result = prime * result + yres;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		AfmImage other = (AfmImage) obj;
+		if (creationTime == null) {
+			if (other.creationTime != null)
+				return false;
+		} else if (!creationTime.equals(other.creationTime))
+			return false;
+		if (description == null) {
+			if (other.description != null)
+				return false;
+		} else if (!description.equals(other.description))
+			return false;
+		if (Double.doubleToLongBits(maxZ) != Double.doubleToLongBits(other.maxZ))
+			return false;
+		if (Double.doubleToLongBits(minZ) != Double.doubleToLongBits(other.minZ))
+			return false;
+		if (modificationTime == null) {
+			if (other.modificationTime != null)
+				return false;
+		} else if (!modificationTime.equals(other.modificationTime))
+			return false;
+		if (si_unit_xy == null) {
+			if (other.si_unit_xy != null)
+				return false;
+		} else if (!si_unit_xy.equals(other.si_unit_xy))
+			return false;
+		if (si_unit_z == null) {
+			if (other.si_unit_z != null)
+				return false;
+		} else if (!si_unit_z.equals(other.si_unit_z))
+			return false;
+		if (title == null) {
+			if (other.title != null)
+				return false;
+		} else if (!title.equals(other.title))
+			return false;
+		if (Double.doubleToLongBits(xreal) != Double.doubleToLongBits(other.xreal))
+			return false;
+		if (xres != other.xres)
+			return false;
+		if (Double.doubleToLongBits(yreal) != Double.doubleToLongBits(other.yreal))
+			return false;
+		if (yres != other.yres)
+			return false;
+		return true;
+	}
+	
 }

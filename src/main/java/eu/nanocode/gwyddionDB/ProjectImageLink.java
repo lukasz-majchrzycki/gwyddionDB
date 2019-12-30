@@ -2,11 +2,19 @@ package eu.nanocode.gwyddionDB;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "ProjectImageLink")
 public class ProjectImageLink {
+
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name = "ID")
+	private long id;
 	
 	@Column(name = "IMAGE_ID")
 	private long imageID;

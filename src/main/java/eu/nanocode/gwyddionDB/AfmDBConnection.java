@@ -2,15 +2,16 @@ package eu.nanocode.gwyddionDB;
 
 import java.util.List;
 
-public interface AfmDBConnectin {
+public interface AfmDBConnection {
 	
-	public AfmImage getAfmImage(String projectName, long imageID);
-	public List<AfmImage> getAll(String projectName);
+	public AfmImage getAfmImage(long imageID);
+	public List<AfmImage> getAll(long projectId);
 	
-	public long sendAfmImage(String projectName, AfmImage afmImage);
-	public boolean sendAll(String projectName, List<AfmImage> afmImageList);
+	public long sendAfmImage(long projectId, AfmImage afmImage);
+	public boolean sendAll(long projectId, List<AfmImage> afmImageList);
 	
 	public List<ProjectItem> getProjectList();
-	public boolean addProject (String projectName);
-	public boolean removeProject (String projectName);
+	public long addProject (String projectName);
+	public boolean removeProject (long projectId);
+	public boolean removeImage (long imageId);
 }

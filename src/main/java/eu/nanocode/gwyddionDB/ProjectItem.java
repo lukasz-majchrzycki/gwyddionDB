@@ -16,7 +16,6 @@ import javax.persistence.UniqueConstraint;
         @UniqueConstraint(columnNames = "PROJECT_ID") })
 public class ProjectItem {
 	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	@Column(name = "PROJECT_ID")
 	private long projectID;
 	
@@ -35,10 +34,15 @@ public class ProjectItem {
 	@Column(name = "DESTINATION", unique = false, nullable = true, length = 500)
 	public URI destination;
 	
-	public ProjectItem(String projectName) {
-		this.projectName = projectName;
+	public ProjectItem() {
 		this.creationTime = LocalDateTime.now();
 		this.modificationTime = LocalDateTime.now();
+	}
+	
+	public ProjectItem(String projectName) {
+		this();
+		this.projectName = projectName;
+
 	}
 
 	public String getProjectName() {
@@ -65,5 +69,57 @@ public class ProjectItem {
 		this.modificationTime = LocalDateTime.now();
 	}
 	
+	protected long generateID() {
+		return this.projectID= this.hashCode();
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((creationTime == null) ? 0 : creationTime.hashCode());
+		result = prime * result + ((description == null) ? 0 : description.hashCode());
+		result = prime * result + ((destination == null) ? 0 : destination.hashCode());
+		result = prime * result + ((modificationTime == null) ? 0 : modificationTime.hashCode());
+		result = prime * result + ((projectName == null) ? 0 : projectName.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ProjectItem other = (ProjectItem) obj;
+		if (creationTime == null) {
+			if (other.creationTime != null)
+				return false;
+		} else if (!creationTime.equals(other.creationTime))
+			return false;
+		if (description == null) {
+			if (other.description != null)
+				return false;
+		} else if (!description.equals(other.description))
+			return false;
+		if (destination == null) {
+			if (other.destination != null)
+				return false;
+		} else if (!destination.equals(other.destination))
+			return false;
+		if (modificationTime == null) {
+			if (other.modificationTime != null)
+				return false;
+		} else if (!modificationTime.equals(other.modificationTime))
+			return false;
+		if (projectName == null) {
+			if (other.projectName != null)
+				return false;
+		} else if (!projectName.equals(other.projectName))
+			return false;
+		return true;
+	}
 	
 }
