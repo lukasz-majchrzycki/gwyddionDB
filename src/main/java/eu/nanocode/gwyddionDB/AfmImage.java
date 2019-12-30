@@ -24,6 +24,9 @@ public class AfmImage implements Serializable {
 	@Column(name = "IMAGE_ID")
 	private long imageID;
 	
+	@Column(name = "PROJECTS_IDS", unique = false, nullable = true)
+	private ArrayList<Long> ProjectsIDs;
+	
 	@Column(name = "TITLE", unique = false, nullable = true, length = 100)
 	public String title;
 	
