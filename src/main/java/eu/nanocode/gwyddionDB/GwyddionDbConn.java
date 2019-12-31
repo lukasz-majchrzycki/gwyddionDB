@@ -80,9 +80,20 @@ public class GwyddionDbConn implements AfmDBConnection{
 		session.getTransaction().commit();
 		return id;
 	}
+	
+	public boolean removeAllImagesFromProject(long projectId) {
+		List<AfmImage> imgList = session.createQuery("select o from " + AfmImage.class.getName() + " o join " +
+				ProjectImageLink.class.getName() + " p "
+				+ " ON o.imageID=p.imageID where p.projectID='"+ projectId +"'").getResultList();
+		for(AfmImage img :imgList) {
+			session.createQuery("delete AfmImage  where imageID="+img.getImageID()).executeUpdate();
+		}
+		return true;
+	}
 
 	@Override
 	public boolean removeProject(long projectId) {
+		this.removeAllImagesFromProject(projectId);
 		session.createQuery("delete ProjectItem  where projectID="+projectId).executeUpdate();
 		session.createQuery("delete ProjectImageLink  where projectID="+projectId).executeUpdate();
 		return true;
