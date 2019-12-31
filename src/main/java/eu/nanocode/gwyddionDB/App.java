@@ -6,38 +6,49 @@ import java.io.IOException;
 import java.net.URL;
 import org.hibernate.Session;
 
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 
-public class App 
+
+public class App extends Application
 {
 		
 	public static void main( String[] args ) throws IOException
     {
-		App main=new App();
-    	Session session = HibernateUtil.getSessionFactory().openSession();
-    	session.beginTransaction();
-		    	
-       	File file = main.getFileFromResources("test.gwy");
-       	List<AfmImage> afmImageList = new GwyddionReader().readAfmFile(file);  
-        
-       	GwyddionDbConn conn = new GwyddionDbConn(session);
- 
-       	session.close();    	      	
-      	HibernateUtil.shutdown(); 	
+		launch();	
     }
     
     
-    private File getFileFromResources(String fileName) {
-
-        ClassLoader classLoader = getClass().getClassLoader();
-
-        URL resource = classLoader.getResource(fileName);
+    private URL getFileFromResources(String fileName) {
+        URL resource = App.class.getResource(fileName);
         if (resource == null) {
             throw new IllegalArgumentException("file is not found!");
         } else {
-            return new File(resource.getFile());
+            return resource;
         }
 
     }
+
+
+	@Override
+	public void start(Stage primaryStage) throws Exception, IOException {
+    	Session session = HibernateUtil.getSessionFactory().openSession();
+    	session.beginTransaction();
+       	GwyddionDbConn conn = new GwyddionDbConn(session);
+       		
+        Parent root=new FXMLLoader(this.getFileFromResources("gwyddionDB.fxml")).load();        
+        
+        primaryStage.setScene(new Scene(root));
+        primaryStage.setTitle("GwyddionDB utility");
+        primaryStage.show();    
+
+       	session.close();    	      	
+      	HibernateUtil.shutdown(); 
+		
+	}
     
  
 }
