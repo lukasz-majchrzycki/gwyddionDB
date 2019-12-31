@@ -95,4 +95,19 @@ public class GwyddionDbConn implements AfmDBConnection{
 		return true;
 	}
 
+	@Override
+	public boolean changeImageProject(long imageId, long oldProjectId, long newProjectId) {
+		session.createQuery("delete ProjectImageLink  where imageID="+imageId+ " AND projectID="+oldProjectId).executeUpdate();
+		session.save(new ProjectImageLink(imageId,newProjectId));
+		return true;
+	}
+
+	@Override
+	public long getImageCount(long projectId) {
+		List<Long> i = session.createQuery("select count(o) from " + AfmImage.class.getName() + " o join " +
+											ProjectImageLink.class.getName() + " p "
+											+ " ON o.imageID=p.imageID where p.projectID='"+ projectId +"'").getResultList();
+		return i.get(0);
+	}
+
 }

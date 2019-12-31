@@ -17,7 +17,9 @@ public class App
     	session.beginTransaction();
 		    	
        	File file = main.getFileFromResources("test.gwy");
-       	List<AfmImage> afmImageList = new GwyddionReader().readAfmFile(file);  	
+       	List<AfmImage> afmImageList = new GwyddionReader().readAfmFile(file);  
+       	
+       	GwyddionDbConn conn = new GwyddionDbConn(session);
 		       	
        	for(AfmImage x: afmImageList) {
        		session.save(x);
