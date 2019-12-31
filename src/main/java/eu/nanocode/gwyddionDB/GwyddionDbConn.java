@@ -1,7 +1,6 @@
 package eu.nanocode.gwyddionDB;
 
 import java.util.List;
-
 import org.hibernate.Session;
 
 @SuppressWarnings("unchecked")
