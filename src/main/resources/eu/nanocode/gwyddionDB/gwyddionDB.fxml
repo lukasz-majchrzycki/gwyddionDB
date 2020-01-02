@@ -102,9 +102,9 @@
                      <content>
                         <TableView fx:id="projectList" minHeight="-Infinity" prefHeight="558.0" prefWidth="282.0">
                            <columns>
-                              <TableColumn prefWidth="120.0" text="Name" />
-                              <TableColumn editable="false" text="Modification" />
-                              <TableColumn editable="false" text="Creation" />
+                              <TableColumn fx:id="colName" prefWidth="120.0" text="Name" />
+                              <TableColumn fx:id="colModification" editable="false" text="Modification" />
+                              <TableColumn fx:id="colCreation" editable="false" text="Creation" />
                            </columns>
                            <columnResizePolicy>
                               <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
