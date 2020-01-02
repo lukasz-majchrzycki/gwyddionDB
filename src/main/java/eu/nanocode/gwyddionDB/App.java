@@ -34,20 +34,11 @@ public class App extends Application
 
 
 	@Override
-	public void start(Stage primaryStage) throws Exception, IOException {
-    	Session session = HibernateUtil.getSessionFactory().openSession();
-    	session.beginTransaction();
-       	GwyddionDbConn conn = new GwyddionDbConn(session);
-       		
-        Parent root=new FXMLLoader(this.getFileFromResources("gwyddionDB.fxml")).load();        
-        
+	public void start(Stage primaryStage) throws Exception, IOException {     		
+        Parent root=new FXMLLoader(this.getFileFromResources("gwyddionDB.fxml")).load();               
         primaryStage.setScene(new Scene(root));
         primaryStage.setTitle("GwyddionDB utility");
-        primaryStage.show();    
-
-       	session.close();    	      	
-      	HibernateUtil.shutdown(); 
-		
+        primaryStage.show();    		
 	}
     
  

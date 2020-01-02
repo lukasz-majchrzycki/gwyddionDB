@@ -66,6 +66,19 @@ public class AppController {
 
 
     public void connect() {
+    	if(!connState) {
+        	session = HibernateUtil.getSessionFactory().openSession();
+        	session.beginTransaction();
+           	conn = new GwyddionDbConn(session);
+           	
+           	connState=true;
+           	connectButton.setText("Disconnect...");
+    	} else {
+           	session.close();    	      	
+          	HibernateUtil.shutdown(); 
+          	
+           	connState=false;
+           	connectButton.setText("Connect DB");
     	}
     	
     }
