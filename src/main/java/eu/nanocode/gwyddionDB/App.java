@@ -1,10 +1,7 @@
 package eu.nanocode.gwyddionDB;
 
-import java.util.List;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import org.hibernate.Session;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -15,6 +12,8 @@ import javafx.stage.Stage;
 
 public class App extends Application
 {
+	private Parent root;
+	private FXMLLoader loader;
 		
 	public static void main( String[] args ) throws IOException
     {
@@ -35,10 +34,20 @@ public class App extends Application
 
 	@Override
 	public void start(Stage primaryStage) throws Exception, IOException {     		
-        Parent root=new FXMLLoader(this.getFileFromResources("gwyddionDB.fxml")).load();               
+        loader=new FXMLLoader(this.getFileFromResources("gwyddionDB.fxml"));        
+        root=loader.load();
         primaryStage.setScene(new Scene(root));
         primaryStage.setTitle("GwyddionDB utility");
-        primaryStage.show();    		
+        primaryStage.show();
+	}
+	
+	@Override
+	public void stop() {
+		AppController appController = ((AppController) loader.getController());
+		if ( appController.connState ) {
+           	appController.session.close();    	      	
+          	HibernateUtil.shutdown(); 
+		}
 	}
     
  

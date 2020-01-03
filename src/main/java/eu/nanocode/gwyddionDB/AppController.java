@@ -21,11 +21,12 @@ import javafx.scene.text.Font;
 
 public class AppController implements Initializable {
 	
-	private boolean connState, leftPanState, rightPanState;
+	private boolean leftPanState, rightPanState;
 	private long projID, imageID;
+	protected boolean connState;
 	
-	private GwyddionDbConn conn;
-	private Session session;
+	protected GwyddionDbConn conn;
+	protected Session session;
 	List<ProjectItem> projectItemList;
 
     @FXML
