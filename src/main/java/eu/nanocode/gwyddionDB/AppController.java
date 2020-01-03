@@ -8,20 +8,38 @@ import org.hibernate.Session;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.NodeOrientation;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 
 public class AppController implements Initializable {
 	
-	private boolean leftPanState, rightPanState;
+	private class Panel{
+		boolean state;
+		double width;
+		Region panel;
+		Button button;
+		public Panel(boolean state, double width, Region panel, Button button) {
+			this.state = state;
+			this.width = width;
+			this.panel = panel;
+			this.button = button;
+		}
+	}
+	
+	Panel leftPanelObj, rightPanelObj; 
 	private long projID, imageID;
 	protected boolean connState;
 	
@@ -54,12 +72,6 @@ public class AppController implements Initializable {
     private Button removeButton;
 
     @FXML
-    private Button leftButton;
-
-    @FXML
-    private Button rightButton;
-
-    @FXML
     private ImageView imgBox;
 
     @FXML
@@ -78,8 +90,23 @@ public class AppController implements Initializable {
     private TableColumn<?, ?> colCreation;
 
     @FXML
-    private Label leftStatus;
+    private Button leftButton;
+    @FXML
+    private VBox leftPanel;
     
+    @FXML
+    private ScrollPane centerPanel;
+    
+    @FXML
+    private Button rightButton;
+    @FXML
+    private ScrollPane rightPanel;
+    
+    @FXML
+    private VBox windowPanel;
+    
+    @FXML
+    private Label leftStatus;
     @FXML
     private Label rightStatus;
     
@@ -94,9 +121,15 @@ public class AppController implements Initializable {
        	projectList.setItems(obsProjectList);
        	
        	projectList.setPlaceholder(new Label("No DB connection. Press Connect DB to start..."));
+       	leftPanelObj = new Panel(true,284.0,leftPanel, leftButton);
+       	rightPanelObj = new Panel(true,280.0,rightPanel, rightButton);
+       	centerPanel.setFitToWidth(true);
+       	leftPanel.setFillWidth(true);
+       	rightPanel.setFitToWidth(true);
     }
 
-    public void connect() {
+    @FXML
+    void connect(ActionEvent event) {
     	if(!connState) {
         	session = HibernateUtil.getSessionFactory().openSession();
         	session.beginTransaction();
@@ -125,6 +158,33 @@ public class AppController implements Initializable {
 
     public void removeImage() {
     	
+    }
+    
+    private void PanelChange(Panel panel ) {
+    	if( panel.state ) {
+    		panel.panel.setPrefWidth(0);
+    		panel.panel.setVisible(false);
+    		centerPanel.setPrefWidth(centerPanel.getWidth()+panel.width);
+    		panel.button.setRotate(180);
+    		panel.state=false;
+    	}
+    	else {
+    		panel.panel.setPrefWidth(panel.width);
+    		panel.panel.setVisible(true);
+    		centerPanel.setPrefWidth(centerPanel.getWidth()-panel.width);
+    		panel.button.setRotate(0);
+    		panel.state=true;
+    	}
+    }
+    
+    @FXML
+    void leftPanelChange(ActionEvent event) {
+    	PanelChange(leftPanelObj);
+    }
+
+    @FXML
+    void rightPanelChange(ActionEvent event) {
+    	PanelChange(rightPanelObj);
     }
     
     

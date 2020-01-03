@@ -38,6 +38,7 @@ public class App extends Application
         root=loader.load();
         primaryStage.setScene(new Scene(root));
         primaryStage.setTitle("GwyddionDB utility");
+        primaryStage.setResizable(false);
         primaryStage.show();
 	}
 	
