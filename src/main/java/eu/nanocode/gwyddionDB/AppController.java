@@ -87,8 +87,8 @@ public class AppController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
        	colName.setCellValueFactory(new PropertyValueFactory<>("ProjectName"));
-       	colModification.setCellValueFactory(new PropertyValueFactory<>("ModificationTime"));
-       	colCreation.setCellValueFactory(new PropertyValueFactory<>("CreationTime"));
+       	colModification.setCellValueFactory(new PropertyValueFactory<>("ModificationTimeString"));
+       	colCreation.setCellValueFactory(new PropertyValueFactory<>("CreationTimeString"));
        	obsProjectList = FXCollections.observableArrayList();
        	projectList.setItems(obsProjectList);
        	
