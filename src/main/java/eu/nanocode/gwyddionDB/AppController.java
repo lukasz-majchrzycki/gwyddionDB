@@ -12,7 +12,10 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.NodeOrientation;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
@@ -45,7 +48,6 @@ public class AppController implements Initializable {
 	
 	protected GwyddionDbConn conn;
 	protected Session session;
-	List<ProjectItem> projectItemList;
 
     @FXML
     private Color x21;
@@ -111,6 +113,7 @@ public class AppController implements Initializable {
     private Label rightStatus;
     
     private ObservableList<ProjectItem> obsProjectList;
+    private ObservableList<AfmImage> obsImageList;
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -119,6 +122,8 @@ public class AppController implements Initializable {
        	colCreation.setCellValueFactory(new PropertyValueFactory<>("CreationTimeString"));
        	obsProjectList = FXCollections.observableArrayList();
        	projectList.setItems(obsProjectList);
+       	
+       	obsImageList = FXCollections.observableArrayList();
        	
        	projectList.setPlaceholder(new Label("No DB connection. Press Connect DB to start..."));
        	leftPanelObj = new Panel(true,284.0,leftPanel, leftButton);
@@ -187,5 +192,16 @@ public class AppController implements Initializable {
     	PanelChange(rightPanelObj);
     }
     
+    @FXML
+    void openProject (ActionEvent event) {
+    	try {
+    		ProjectItem selectedProject = projectList.getSelectionModel().getSelectedItem();
+    		obsImageList.addAll(conn.getAll(selectedProject.getProjectID())  );
+    	} catch (NullPointerException e)
+    	{
+    		Alert alert = new Alert(AlertType.ERROR, "Select project", ButtonType.OK);
+    		alert.show();
+    	}  
+    }
     
 }
