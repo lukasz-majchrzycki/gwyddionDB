@@ -20,12 +20,21 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
+import javafx.scene.image.WritablePixelFormat;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 public class AppController implements Initializable {
 	
@@ -114,6 +123,8 @@ public class AppController implements Initializable {
     
     private ObservableList<ProjectItem> obsProjectList;
     private ObservableList<AfmImage> obsImageList;
+    private WritableImage image;
+    private PixelWriter pixelWriter;
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -131,6 +142,11 @@ public class AppController implements Initializable {
        	centerPanel.setFitToWidth(true);
        	leftPanel.setFillWidth(true);
        	rightPanel.setFitToWidth(true);
+       	
+       	image = new WritableImage(256, 256);
+       	pixelWriter=image.getPixelWriter();
+       	
+       	imgBox.setImage(image);
     }
 
     @FXML
@@ -192,11 +208,29 @@ public class AppController implements Initializable {
     	PanelChange(rightPanelObj);
     }
     
+    private byte palette(double x) {
+		return (byte)( (x - obsImageList.get(0).getMinZ() ) /
+				(obsImageList.get(0).getMaxZ() - obsImageList.get(0).getMinZ() ) *Byte.MAX_VALUE );
+    }
+    
     @FXML
     void openProject (ActionEvent event) {
     	try {
     		ProjectItem selectedProject = projectList.getSelectionModel().getSelectedItem();
-    		obsImageList.addAll(conn.getAll(selectedProject.getProjectID())  );
+    		projID=selectedProject.getProjectID();
+    		obsImageList.addAll(conn.getAll(projID)  );
+    		
+    		ByteBuffer buffer = ByteBuffer.allocateDirect(3*obsImageList.get(0).getXres() * 
+    														obsImageList.get(0).getYres() );
+    		for(Double x: obsImageList.get(0).afmMap) {
+    			byte b = palette(x);
+    			buffer.put(b); buffer.put(b); buffer.put(b);
+    		}
+    		buffer.rewind();
+    		byte[] b = new byte[buffer.remaining()];
+    		buffer.get(b);
+    		pixelWriter.setPixels(0, 0, obsImageList.get(0).getXres(), obsImageList.get(0).getYres(),
+    				WritablePixelFormat.getByteRgbInstance(), b, 0, obsImageList.get(0).getXres()*3);
     	} catch (NullPointerException e)
     	{
     		Alert alert = new Alert(AlertType.ERROR, "Select project", ButtonType.OK);
