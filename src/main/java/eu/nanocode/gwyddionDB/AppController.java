@@ -1,17 +1,25 @@
 package eu.nanocode.gwyddionDB;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.ResourceBundle;
+
+import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.Session;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.NodeOrientation;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
@@ -51,6 +59,9 @@ public class AppController implements Initializable {
 		}
 	}
 	
+	protected Stage stage;
+	protected final FileChooser fileChooser = new FileChooser();
+	
 	Panel leftPanelObj, rightPanelObj; 
 	private long projID, imageID;
 	protected boolean connState;
@@ -81,6 +92,12 @@ public class AppController implements Initializable {
 
     @FXML
     private Button removeButton;
+    
+    @FXML
+    private Button addProjectButton;
+
+    @FXML
+    private Button removeProjectButton;
 
     @FXML
     private ImageView imgBox;
@@ -126,6 +143,8 @@ public class AppController implements Initializable {
     private WritableImage image;
     private PixelWriter pixelWriter;
     
+    private String newProjectName;
+    
     @Override
     public void initialize(URL location, ResourceBundle resources) {
        	colName.setCellValueFactory(new PropertyValueFactory<>("ProjectName"));
@@ -143,10 +162,19 @@ public class AppController implements Initializable {
        	leftPanel.setFillWidth(true);
        	rightPanel.setFitToWidth(true);
        	
-       	image = new WritableImage(256, 256);
+       	fileChooser.setTitle("Open AFM data File");
+       	fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("gwyddion files", "*.gwy") );
+       	
+       	image = new WritableImage(8, 8);
        	pixelWriter=image.getPixelWriter();
        	
        	imgBox.setImage(image);
+       	
+       	openButton.setDisable(!connState);
+       	addButton.setDisable(!connState);
+       	removeButton.setDisable(!connState);
+       	addProjectButton.setDisable(!connState);
+       	removeProjectButton.setDisable(!connState);
     }
 
     @FXML
@@ -170,6 +198,11 @@ public class AppController implements Initializable {
            	obsProjectList.clear();
            	projectList.setPlaceholder(new Label("DB connection stopped. Press Connect DB to start..."));
     	}
+       	openButton.setDisable(!connState);
+       	addButton.setDisable(!connState);
+       	removeButton.setDisable(!connState);
+       	addProjectButton.setDisable(!connState);
+       	removeProjectButton.setDisable(!connState);
     	
     }
     
@@ -236,6 +269,90 @@ public class AppController implements Initializable {
     		Alert alert = new Alert(AlertType.ERROR, "Select project", ButtonType.OK);
     		alert.show();
     	}  
+    }
+    
+    private String TextFieldDialog(String s) {
+    	Stage dialogStage = new Stage();
+    	dialogStage.initModality(Modality.WINDOW_MODAL);
+    	newProjectName = null;
+    	
+    	TextField textField = new TextField();
+    	
+    	HBox hbox = new HBox(new Text(s), textField);
+    	hbox.setAlignment(Pos.CENTER);
+    	hbox.setSpacing(10);
+    	
+    	Button OkButton = new Button("OK");
+    	OkButton.setOnAction( new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				newProjectName = textField.getText();
+				dialogStage.close();
+			}
+    		
+    	});
+    	
+    	Button CancelButton = new Button("Cancel");
+    	CancelButton.setOnAction( new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				dialogStage.close();
+			}
+    		
+    	});
+    	
+    	HBox hbox2 = new HBox(OkButton, CancelButton);
+    	hbox2.setAlignment(Pos.CENTER);
+    	hbox2.setSpacing(10);
+    	VBox vbox = new VBox(hbox, hbox2);
+    	vbox.setAlignment(Pos.CENTER);
+    	vbox.setPadding( new Insets(10,10,10,10) );
+    	vbox.setSpacing(10);
+
+    	dialogStage.setScene(new Scene(vbox));
+    	dialogStage.showAndWait();
+    	
+    	return newProjectName;
+    }
+    
+    @FXML
+    void addProject(ActionEvent event) { 
+    	try {
+        	String projectName = TextFieldDialog("Project name: ");
+        	obsProjectList.add(conn.addProject(projectName) );
+    	} catch (NullPointerException e) {
+    	}
+    }
+    
+    @FXML
+    void removeProject(ActionEvent event) {
+    	try {
+    		ProjectItem selectedProject = projectList.getSelectionModel().getSelectedItem();
+    		obsProjectList.remove(conn.removeProject(selectedProject.getProjectID()) );
+    	}
+    	catch (NullPointerException e)
+    	{
+    		Alert alert = new Alert(AlertType.ERROR, "Select project", ButtonType.OK);
+    		alert.show();
+    	} 
+    	catch (TransactionRequiredException e) {
+    		Alert alert = new Alert(AlertType.ERROR, "Error during remove project. Reconnect database and try again", ButtonType.OK);
+    		alert.show();
+    	}
+    }
+    
+    @FXML
+    void addImage(ActionEvent event) throws IOException {
+    	List<File> filelist = fileChooser.showOpenMultipleDialog(stage);
+        if (filelist != null) {
+            for(File file: filelist) {
+                GwyddionReader reader = new GwyddionReader();
+            	List<AfmImage> afmImages = reader.readAfmFile(file);
+                conn.sendAll(projID, afmImages);
+            }
+        }
     }
     
 }

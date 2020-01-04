@@ -36,6 +36,7 @@ public class App extends Application
 	public void start(Stage primaryStage) throws Exception, IOException {     		
         loader=new FXMLLoader(this.getFileFromResources("gwyddionDB.fxml"));        
         root=loader.load();
+        ((AppController) loader.getController()).stage = primaryStage; 
         primaryStage.setScene(new Scene(root));
         primaryStage.setTitle("GwyddionDB utility");
         primaryStage.setResizable(false);
