@@ -4,7 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.ResourceBundle;
 
 import javax.persistence.TransactionRequiredException;
@@ -12,7 +16,9 @@ import javax.persistence.TransactionRequiredException;
 import org.hibernate.Session;
 
 import javafx.collections.FXCollections;
+import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -36,6 +42,7 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.image.WritablePixelFormat;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -131,6 +138,9 @@ public class AppController implements Initializable {
     private ScrollPane rightPanel;
     
     @FXML
+    private TilePane imgPanel;
+    
+    @FXML
     private VBox windowPanel;
     
     @FXML
@@ -140,8 +150,9 @@ public class AppController implements Initializable {
     
     private ObservableList<ProjectItem> obsProjectList;
     private ObservableList<AfmImage> obsImageList;
+    private ObservableMap<AfmImage, WritableImage> obsImages;
     private WritableImage image;
-    private PixelWriter pixelWriter;
+ //   private PixelWriter pixelWriter;
     
     private String newProjectName;
     
@@ -152,6 +163,25 @@ public class AppController implements Initializable {
        	colCreation.setCellValueFactory(new PropertyValueFactory<>("CreationTimeString"));
        	obsProjectList = FXCollections.observableArrayList();
        	projectList.setItems(obsProjectList);
+       	
+       	obsImages = FXCollections.observableMap(new HashMap<>());
+       	obsImages.addListener( new MapChangeListener<AfmImage, WritableImage>() {
+
+			@Override
+			public void onChanged(Change<? extends AfmImage, ? extends WritableImage> change) {
+				if (change.wasAdded()) {
+					ImageView i = new ImageView();
+					i.setImage(change.getValueAdded() ) ;
+					i.resize(256, 256);
+					imgPanel.getChildren().add( i );
+				}else if (change.wasRemoved()) {
+					//imgPanel.getChildren().remove(change.getValueRemoved());
+				}
+				
+			}
+       		
+       	}
+       			);
        	
        	obsImageList = FXCollections.observableArrayList();
        	
@@ -165,10 +195,7 @@ public class AppController implements Initializable {
        	fileChooser.setTitle("Open AFM data File");
        	fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("gwyddion files", "*.gwy") );
        	
-       	image = new WritableImage(8, 8);
-       	pixelWriter=image.getPixelWriter();
-       	
-       	imgBox.setImage(image);
+       	//pixelWriter=image.getPixelWriter();
        	
        	openButton.setDisable(!connState);
        	addButton.setDisable(!connState);
@@ -241,9 +268,8 @@ public class AppController implements Initializable {
     	PanelChange(rightPanelObj);
     }
     
-    private byte palette(double x) {
-		return (byte)( (x - obsImageList.get(0).getMinZ() ) /
-				(obsImageList.get(0).getMaxZ() - obsImageList.get(0).getMinZ() ) *Byte.MAX_VALUE );
+    private byte palette(double x, double min, double max) {
+		return (byte)( (x -min ) / (max - min ) *Byte.MAX_VALUE );
     }
     
     @FXML
@@ -251,19 +277,31 @@ public class AppController implements Initializable {
     	try {
     		ProjectItem selectedProject = projectList.getSelectionModel().getSelectedItem();
     		projID=selectedProject.getProjectID();
-    		obsImageList.addAll(conn.getAll(projID)  );
+    		//obsImageList.addAll(conn.getAll(projID)  );
+    		//obsImages.keySet().addAll(conn.getAll(projID));
+    		List<AfmImage> newImgList = new ArrayList<>();
+    		newImgList.addAll(conn.getAll(projID));
     		
-    		ByteBuffer buffer = ByteBuffer.allocateDirect(3*obsImageList.get(0).getXres() * 
-    														obsImageList.get(0).getYres() );
-    		for(Double x: obsImageList.get(0).afmMap) {
-    			byte b = palette(x);
-    			buffer.put(b); buffer.put(b); buffer.put(b);
+    		//for(Map.Entry<AfmImage, WritableImage> x : obsImages.entrySet())
+    		for(AfmImage x : newImgList)
+    		{
+    			PixelWriter pixelWriter;
+    			ByteBuffer buffer = ByteBuffer.allocateDirect(3* x.getXres() *  x.getYres());
+    			WritableImage wi = new WritableImage(x.getXres(),  x.getYres());
+    			obsImages.put(x, wi);
+    			
+        		for(Double y: x.afmMap) {
+        			byte b = palette(y, x.getMinZ(), x.getMaxZ());
+        			buffer.put(b); buffer.put(b); buffer.put(b);
+        		}
+        		buffer.rewind();
+        		byte[] b = new byte[buffer.remaining()];
+        		buffer.get(b);
+        		
+        		pixelWriter=wi.getPixelWriter();
+        		pixelWriter.setPixels(0, 0, x.getXres(), x.getYres(),
+        				WritablePixelFormat.getByteRgbInstance(), b, 0, x.getXres()*3);
     		}
-    		buffer.rewind();
-    		byte[] b = new byte[buffer.remaining()];
-    		buffer.get(b);
-    		pixelWriter.setPixels(0, 0, obsImageList.get(0).getXres(), obsImageList.get(0).getYres(),
-    				WritablePixelFormat.getByteRgbInstance(), b, 0, obsImageList.get(0).getXres()*3);
     	} catch (NullPointerException e)
     	{
     		Alert alert = new Alert(AlertType.ERROR, "Select project", ButtonType.OK);
