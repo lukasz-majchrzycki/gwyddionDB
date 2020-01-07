@@ -25,6 +25,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -40,6 +41,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.image.WritablePixelFormat;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.TilePane;
@@ -107,9 +109,6 @@ public class AppController implements Initializable {
     private Button removeProjectButton;
 
     @FXML
-    private ImageView imgBox;
-
-    @FXML
     private TableView<?> detailsTable;
 
     @FXML
@@ -139,6 +138,9 @@ public class AppController implements Initializable {
     
     @FXML
     private TilePane imgPanel;
+  
+    @FXML
+    private GridPane buttonPanel;
     
     @FXML
     private VBox windowPanel;
@@ -149,12 +151,10 @@ public class AppController implements Initializable {
     private Label rightStatus;
     
     private ObservableList<ProjectItem> obsProjectList;
-    private ObservableList<AfmImage> obsImageList;
     private ObservableMap<AfmImage, WritableImage> obsImages;
-    private WritableImage image;
- //   private PixelWriter pixelWriter;
     
     private String newProjectName;
+    private Label emptyProjectInfo;
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -163,28 +163,45 @@ public class AppController implements Initializable {
        	colCreation.setCellValueFactory(new PropertyValueFactory<>("CreationTimeString"));
        	obsProjectList = FXCollections.observableArrayList();
        	projectList.setItems(obsProjectList);
+       	imgPanel.setHgap(10);
+       	imgPanel.setVgap(10);
+       	emptyProjectInfo = new Label("No images in project");
        	
        	obsImages = FXCollections.observableMap(new HashMap<>());
        	obsImages.addListener( new MapChangeListener<AfmImage, WritableImage>() {
 
 			@Override
 			public void onChanged(Change<? extends AfmImage, ? extends WritableImage> change) {
+				if(obsImages.isEmpty()) {
+					imgPanel.getChildren().add(emptyProjectInfo);
+				}
+				else {
+					imgPanel.getChildren().remove(emptyProjectInfo);
+				}
+				
 				if (change.wasAdded()) {
 					ImageView i = new ImageView();
 					i.setImage(change.getValueAdded() ) ;
-					i.resize(256, 256);
+					i.setFitWidth(256);
+					i.setPreserveRatio(true);
 					imgPanel.getChildren().add( i );
 				}else if (change.wasRemoved()) {
-					//imgPanel.getChildren().remove(change.getValueRemoved());
+					Node i=null;
+					for(Node x : imgPanel.getChildren()) {
+						if(x.getClass()==ImageView.class) {
+							if( ((ImageView)x).getImage()==change.getValueRemoved() ) {
+								i=x;
+							}
+						}
+					}
+					imgPanel.getChildren().remove(i);
 				}
-				
+				imgPanel.setPrefWidth(centerPanel.getWidth()-20);
 			}
        		
        	}
        			);
-       	
-       	obsImageList = FXCollections.observableArrayList();
-       	
+       	     	
        	projectList.setPlaceholder(new Label("No DB connection. Press Connect DB to start..."));
        	leftPanelObj = new Panel(true,284.0,leftPanel, leftButton);
        	rightPanelObj = new Panel(true,280.0,rightPanel, rightButton);
@@ -194,9 +211,7 @@ public class AppController implements Initializable {
        	
        	fileChooser.setTitle("Open AFM data File");
        	fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("gwyddion files", "*.gwy") );
-       	
-       	//pixelWriter=image.getPixelWriter();
-       	
+       	     	
        	openButton.setDisable(!connState);
        	addButton.setDisable(!connState);
        	removeButton.setDisable(!connState);
@@ -215,6 +230,7 @@ public class AppController implements Initializable {
            	connectButton.setText("Disconnect...");
            	
            	obsProjectList.addAll(conn.getProjectList());
+           	projectList.setPlaceholder(new Label("No project in DB. Add project to start..."));
 
     	} else {
            	session.close();    	      	
@@ -223,7 +239,7 @@ public class AppController implements Initializable {
            	connState=false;
            	connectButton.setText("Connect DB");
            	obsProjectList.clear();
-           	projectList.setPlaceholder(new Label("DB connection stopped. Press Connect DB to start..."));
+           	projectList.setPlaceholder(new Label("DB connection stopped. Connect DB to start..."));
     	}
        	openButton.setDisable(!connState);
        	addButton.setDisable(!connState);
@@ -233,10 +249,6 @@ public class AppController implements Initializable {
     	
     }
     
-    public void addImage() {
-    	
-    }
-
     public void removeImage() {
     	
     }
@@ -256,6 +268,8 @@ public class AppController implements Initializable {
     		panel.button.setRotate(0);
     		panel.state=true;
     	}
+    	buttonPanel.setPrefWidth(centerPanel.getWidth()-10);
+    	
     }
     
     @FXML
@@ -272,41 +286,50 @@ public class AppController implements Initializable {
 		return (byte)( (x -min ) / (max - min ) *Byte.MAX_VALUE );
     }
     
+    private void addObsImages(List<AfmImage> newImgList) {
+		for(AfmImage x : newImgList)
+		{
+			PixelWriter pixelWriter;
+			ByteBuffer buffer = ByteBuffer.allocateDirect(3* x.getXres() *  x.getYres());
+			WritableImage wi = new WritableImage(x.getXres(),  x.getYres());
+			obsImages.put(x, wi);
+			
+    		for(Double y: x.afmMap) {
+    			byte b = palette(y, x.getMinZ(), x.getMaxZ());
+    			buffer.put(b); buffer.put(b); buffer.put(b);
+    		}
+    		buffer.rewind();
+    		byte[] b = new byte[buffer.remaining()];
+    		buffer.get(b);
+    		
+    		pixelWriter=wi.getPixelWriter();
+    		pixelWriter.setPixels(0, 0, x.getXres(), x.getYres(),
+    				WritablePixelFormat.getByteRgbInstance(), b, 0, x.getXres()*3);
+		}
+    }
+    
     @FXML
     void openProject (ActionEvent event) {
     	try {
     		ProjectItem selectedProject = projectList.getSelectionModel().getSelectedItem();
     		projID=selectedProject.getProjectID();
-    		//obsImageList.addAll(conn.getAll(projID)  );
-    		//obsImages.keySet().addAll(conn.getAll(projID));
-    		List<AfmImage> newImgList = new ArrayList<>();
+     		List<AfmImage> newImgList = new ArrayList<>();
     		newImgList.addAll(conn.getAll(projID));
+    		obsImages.clear();		
     		
-    		//for(Map.Entry<AfmImage, WritableImage> x : obsImages.entrySet())
-    		for(AfmImage x : newImgList)
-    		{
-    			PixelWriter pixelWriter;
-    			ByteBuffer buffer = ByteBuffer.allocateDirect(3* x.getXres() *  x.getYres());
-    			WritableImage wi = new WritableImage(x.getXres(),  x.getYres());
-    			obsImages.put(x, wi);
-    			
-        		for(Double y: x.afmMap) {
-        			byte b = palette(y, x.getMinZ(), x.getMaxZ());
-        			buffer.put(b); buffer.put(b); buffer.put(b);
-        		}
-        		buffer.rewind();
-        		byte[] b = new byte[buffer.remaining()];
-        		buffer.get(b);
-        		
-        		pixelWriter=wi.getPixelWriter();
-        		pixelWriter.setPixels(0, 0, x.getXres(), x.getYres(),
-        				WritablePixelFormat.getByteRgbInstance(), b, 0, x.getXres()*3);
+    		imgPanel.getChildren().clear();
+    		if(obsImages.isEmpty()) {
+    			imgPanel.getChildren().add(emptyProjectInfo);
+    		addObsImages(newImgList);	
+    		
+    		
     		}
-    	} catch (NullPointerException e)
-    	{
-    		Alert alert = new Alert(AlertType.ERROR, "Select project", ButtonType.OK);
-    		alert.show();
-    	}  
+	} catch (NullPointerException e)
+	{
+		Alert alert = new Alert(AlertType.ERROR, "Select project", ButtonType.OK);
+		alert.show();
+	} 
+
     }
     
     private String TextFieldDialog(String s) {
@@ -389,6 +412,7 @@ public class AppController implements Initializable {
                 GwyddionReader reader = new GwyddionReader();
             	List<AfmImage> afmImages = reader.readAfmFile(file);
                 conn.sendAll(projID, afmImages);
+                addObsImages(afmImages);
             }
         }
     }
