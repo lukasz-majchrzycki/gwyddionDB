@@ -74,7 +74,8 @@ public class AppController implements Initializable {
 	protected final FileChooser fileChooser = new FileChooser();
 	
 	Panel leftPanelObj, rightPanelObj; 
-	private long projID, imageID;
+	private long projID;
+	private Long imageID;
 	protected boolean connState;
 	
 	protected GwyddionDbConn conn;
@@ -183,7 +184,6 @@ public class AppController implements Initializable {
        	obsImages = FXCollections.observableMap(new HashMap<>());
        	obsImages.addListener( new MapChangeListener<Long, ImageData>() {
 
-			@SuppressWarnings("unchecked")
 			@Override
 			public void onChanged(Change<? extends Long, ? extends ImageData> change) {
 				if(obsImages.isEmpty()) {
@@ -251,7 +251,15 @@ public class AppController implements Initializable {
     	
     }
     
-    public void removeImage() {
+    @FXML
+    public void removeImage(ActionEvent event) {
+    	try{
+    		conn.removeImage(imageID);
+    		obsImages.remove(imageID);
+    	}catch (Exception e) {
+    		Alert alert = new Alert(AlertType.ERROR, "Select image from project", ButtonType.OK);
+    		alert.show();
+    	}
     	
     }
     
@@ -331,7 +339,7 @@ public class AppController implements Initializable {
     		if(obsImages.isEmpty()) {
     			imgPanel.getChildren().add(emptyProjectInfo);
     		addObsImages(newImgList);	
-    		
+    		imageID = null;
     		
     		}
 	} catch (NullPointerException e)

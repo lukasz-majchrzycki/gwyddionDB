@@ -154,7 +154,7 @@
                                           <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                        </HBox.margin>
                                     </Button>
-                                    <Button fx:id="removeButton" alignment="CENTER" contentDisplay="CENTER" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="70.0" text="Remove" textAlignment="CENTER">
+                                    <Button fx:id="removeButton" alignment="CENTER" contentDisplay="CENTER" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" onAction="#removeImage" prefHeight="25.0" prefWidth="70.0" text="Remove" textAlignment="CENTER">
                                        <HBox.margin>
                                           <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                        </HBox.margin>
