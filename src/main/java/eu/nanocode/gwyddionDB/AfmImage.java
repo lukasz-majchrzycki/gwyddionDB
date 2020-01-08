@@ -2,6 +2,7 @@ package eu.nanocode.gwyddionDB;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -15,6 +16,7 @@ import javax.persistence.UniqueConstraint;
 public class AfmImage implements Serializable {	
 	
 	private static final long serialVersionUID = -1798070786993154676L;
+	private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 	
 	@Id
 	@Column(name = "IMAGE_ID")
@@ -142,6 +144,14 @@ public class AfmImage implements Serializable {
 	}
 	public void changeModificationTime() {
 		this.modificationTime = LocalDateTime.now();
+	}
+	
+	public String getCreationTimeString() {
+		return creationTime.format(formatter);
+	}
+
+	public String getModificationTimeString() {
+		return modificationTime.format(formatter);
 	}
 
 	@Override

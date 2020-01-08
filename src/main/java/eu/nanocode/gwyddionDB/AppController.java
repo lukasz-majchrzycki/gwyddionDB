@@ -2,6 +2,9 @@ package eu.nanocode.gwyddionDB;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -112,7 +115,11 @@ public class AppController implements Initializable {
     private Button removeProjectButton;
 
     @FXML
-    private TableView<?> detailsTable;
+    private TableView<Detail> detailsTable;
+    @FXML
+    private TableColumn<?, ?> colDetails;
+    @FXML
+    private TableColumn<?, ?> colValue;
 
     @FXML
     private TableView<ProjectItem> projectList;
@@ -164,8 +171,29 @@ public class AppController implements Initializable {
 		}
     	
     }
+    
+    public class Detail{
+    	String name;
+    	String methodName;
+    	String value;
+		public Detail(String name, String methodName, String value) {
+			this.name = name;
+			this.methodName = methodName;
+			this.value = value;
+		}
+		public String getMethodName() {
+			return methodName;
+		}
+		public String getName() {
+			return name;
+		}
+		public String getValue() {
+			return value;
+		}
+    }
     private ObservableList<ProjectItem> obsProjectList;
     private ObservableMap<Long, ImageData> obsImages;
+    private ObservableList<Detail> obsDetails;
     
     private String newProjectName;
     private Label emptyProjectInfo;
@@ -177,6 +205,25 @@ public class AppController implements Initializable {
        	colCreation.setCellValueFactory(new PropertyValueFactory<>("CreationTimeString"));
        	obsProjectList = FXCollections.observableArrayList();
        	projectList.setItems(obsProjectList);
+       	
+       	colDetails.setCellValueFactory(new PropertyValueFactory<>("Name"));
+        colValue.setCellValueFactory(new PropertyValueFactory<>("Value"));
+        obsDetails = FXCollections.observableArrayList(
+        		new Detail("Title", "Title",null),
+        		new Detail("Min Z", "MinZ",null),
+        		new Detail("Max Z", "MaxZ",null),
+        		new Detail("X pixels", "Xres",null),
+        		new Detail("Y pixels", "Yres",null),
+        		new Detail("X size", "Xreal",null),
+        		new Detail("Y size", "Yreal",null),
+        		new Detail("Creation Time", "CreationTimeString",null),
+        		new Detail("Modification Time", "ModificationTimeString",null),
+        		new Detail("Lateral unit", "Si_unit_xy",null),
+        		new Detail("Z unit", "Si_unit_z",null),
+        		new Detail("Description", "Description",null)
+        		);
+       	detailsTable.setItems(obsDetails);
+       	
        	imgPanel.setHgap(10);
        	imgPanel.setVgap(10);
        	emptyProjectInfo = new Label("No images in project");
@@ -296,6 +343,27 @@ public class AppController implements Initializable {
 		return (byte)( (x -min ) / (max - min ) *Byte.MAX_VALUE );
     }
     
+    private void changeImageSellection() {
+    	Method methods[] = obsImages.get(imageID).afmImage.getClass().getMethods();
+    	String s;
+    	for(Method f : methods) {
+    		s=f.getName();
+    		for(int i=0;i<obsDetails.size();i++) {
+				
+    			if(s.equals("get"+obsDetails.get(i).methodName) ){
+						try {
+						String s2=(f.invoke(obsImages.get(imageID).afmImage )).toString();
+						obsDetails.set(i, new Detail(obsDetails.get(i).name, obsDetails.get(i).methodName, s2 )  );
+					} catch (IllegalAccessException | IllegalArgumentException
+							| InvocationTargetException e) {
+					}
+
+
+    			}
+    		}
+    	}		
+    }
+    
     private void addObsImages(List<AfmImage> newImgList) {
 		for(AfmImage x : newImgList)
 		{
@@ -324,11 +392,12 @@ public class AppController implements Initializable {
 			i.setFitWidth(256);
 			i.setPreserveRatio(true);
 			box.setOnMouseClicked((e) -> {
-				if(imageID!=null) {
+		    	if(imageID!=null) {
 					obsImages.get(imageID).imageView.getStyleClass().removeAll("image-view-border");
 				}	
 				imageID=x.getImageID();
 				box.getStyleClass().add("image-view-border");
+				changeImageSellection();
 			});
 		}
     }
