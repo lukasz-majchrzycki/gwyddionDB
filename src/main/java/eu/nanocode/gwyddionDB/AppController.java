@@ -156,8 +156,8 @@ public class AppController implements Initializable {
     private class ImageData{
     	AfmImage afmImage;
     	WritableImage writableImage;
-    	ImageView imageView;
-		public ImageData(AfmImage afmImage, WritableImage writableImage, ImageView imageView) {
+    	Node imageView;
+		public ImageData(AfmImage afmImage, WritableImage writableImage, Node imageView) {
 			this.afmImage = afmImage;
 			this.writableImage = writableImage;
 			this.imageView = imageView;
@@ -303,7 +303,8 @@ public class AppController implements Initializable {
 			ByteBuffer buffer = ByteBuffer.allocateDirect(3* x.getXres() *  x.getYres());
 			WritableImage wi = new WritableImage(x.getXres(),  x.getYres());
 			ImageView i = new ImageView();
-			obsImages.put(x.getImageID(), new ImageData(x,wi,i));
+			HBox box = new HBox();
+			obsImages.put(x.getImageID(), new ImageData(x,wi,box));
 			
     		for(Double y: x.afmMap) {
     			byte b = palette(y, x.getMinZ(), x.getMaxZ());
@@ -317,11 +318,17 @@ public class AppController implements Initializable {
     		pixelWriter.setPixels(0, 0, x.getXres(), x.getYres(),
     				WritablePixelFormat.getByteRgbInstance(), b, 0, x.getXres()*3);
     		
+    		box.getChildren().add(i);
+    		box.setSpacing(5);
 			i.setImage(wi) ;
 			i.setFitWidth(256);
 			i.setPreserveRatio(true);
-			i.setOnMouseClicked((e) -> {
+			box.setOnMouseClicked((e) -> {
+				if(imageID!=null) {
+					obsImages.get(imageID).imageView.getStyleClass().removeAll("image-view-border");
+				}	
 				imageID=x.getImageID();
+				box.getStyleClass().add("image-view-border");
 			});
 		}
     }
