@@ -9,12 +9,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Observable;
 import java.util.ResourceBundle;
 
 import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.Session;
 
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
@@ -149,9 +151,20 @@ public class AppController implements Initializable {
     private Label leftStatus;
     @FXML
     private Label rightStatus;
-    
+       
+    private class ImageData{
+    	AfmImage afmImage;
+    	WritableImage writableImage;
+    	ImageView imageView;
+		public ImageData(AfmImage afmImage, WritableImage writableImage, ImageView imageView) {
+			this.afmImage = afmImage;
+			this.writableImage = writableImage;
+			this.imageView = imageView;
+		}
+    	
+    }
     private ObservableList<ProjectItem> obsProjectList;
-    private ObservableMap<AfmImage, WritableImage> obsImages;
+    private ObservableMap<Long, ImageData> obsImages;
     
     private String newProjectName;
     private Label emptyProjectInfo;
@@ -168,10 +181,11 @@ public class AppController implements Initializable {
        	emptyProjectInfo = new Label("No images in project");
        	
        	obsImages = FXCollections.observableMap(new HashMap<>());
-       	obsImages.addListener( new MapChangeListener<AfmImage, WritableImage>() {
+       	obsImages.addListener( new MapChangeListener<Long, ImageData>() {
 
+			@SuppressWarnings("unchecked")
 			@Override
-			public void onChanged(Change<? extends AfmImage, ? extends WritableImage> change) {
+			public void onChanged(Change<? extends Long, ? extends ImageData> change) {
 				if(obsImages.isEmpty()) {
 					imgPanel.getChildren().add(emptyProjectInfo);
 				}
@@ -180,21 +194,9 @@ public class AppController implements Initializable {
 				}
 				
 				if (change.wasAdded()) {
-					ImageView i = new ImageView();
-					i.setImage(change.getValueAdded() ) ;
-					i.setFitWidth(256);
-					i.setPreserveRatio(true);
-					imgPanel.getChildren().add( i );
+					imgPanel.getChildren().add( change.getValueAdded().imageView );
 				}else if (change.wasRemoved()) {
-					Node i=null;
-					for(Node x : imgPanel.getChildren()) {
-						if(x.getClass()==ImageView.class) {
-							if( ((ImageView)x).getImage()==change.getValueRemoved() ) {
-								i=x;
-							}
-						}
-					}
-					imgPanel.getChildren().remove(i);
+					imgPanel.getChildren().remove(change.getValueRemoved().imageView);
 				}
 				imgPanel.setPrefWidth(centerPanel.getWidth()-20);
 			}
@@ -292,7 +294,8 @@ public class AppController implements Initializable {
 			PixelWriter pixelWriter;
 			ByteBuffer buffer = ByteBuffer.allocateDirect(3* x.getXres() *  x.getYres());
 			WritableImage wi = new WritableImage(x.getXres(),  x.getYres());
-			obsImages.put(x, wi);
+			ImageView i = new ImageView();
+			obsImages.put(x.getImageID(), new ImageData(x,wi,i));
 			
     		for(Double y: x.afmMap) {
     			byte b = palette(y, x.getMinZ(), x.getMaxZ());
@@ -305,6 +308,13 @@ public class AppController implements Initializable {
     		pixelWriter=wi.getPixelWriter();
     		pixelWriter.setPixels(0, 0, x.getXres(), x.getYres(),
     				WritablePixelFormat.getByteRgbInstance(), b, 0, x.getXres()*3);
+    		
+			i.setImage(wi) ;
+			i.setFitWidth(256);
+			i.setPreserveRatio(true);
+			i.setOnMouseClicked((e) -> {
+				imageID=x.getImageID();
+			});
 		}
     }
     
@@ -411,8 +421,7 @@ public class AppController implements Initializable {
             for(File file: filelist) {
                 GwyddionReader reader = new GwyddionReader();
             	List<AfmImage> afmImages = reader.readAfmFile(file);
-                conn.sendAll(projID, afmImages);
-                addObsImages(afmImages);
+                addObsImages(conn.sendAll(projID, afmImages) );
             }
         }
     }
