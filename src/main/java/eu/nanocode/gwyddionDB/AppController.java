@@ -19,6 +19,7 @@ import java.util.ResourceBundle;
 
 import javax.persistence.TransactionRequiredException;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 
 import javafx.beans.value.ObservableValue;
@@ -39,6 +40,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -269,19 +271,34 @@ public class AppController implements Initializable {
        	addProjectButton.setDisable(!connState);
        	removeProjectButton.setDisable(!connState);
     }
+    
+    private void startConnection(String pass) {
+    	HibernateUtil.setPass(pass);
+		session = HibernateUtil.getSessionFactory().openSession();
+		session.beginTransaction();
+		conn = new GwyddionDbConn(session);
+		
+		connState=true;
+		connectButton.setText("Disconnect...");
+		
+		obsProjectList.addAll(conn.getProjectList());
+		projectList.setPlaceholder(new Label("No project in DB. Add project to start..."));
+    }
 
     @FXML
     void connect(ActionEvent event) {
     	if(!connState) {
-        	session = HibernateUtil.getSessionFactory().openSession();
-        	session.beginTransaction();
-           	conn = new GwyddionDbConn(session);
-           	
-           	connState=true;
-           	connectButton.setText("Disconnect...");
-           	
-           	obsProjectList.addAll(conn.getProjectList());
-           	projectList.setPlaceholder(new Label("No project in DB. Add project to start..."));
+        	try {
+        		startConnection(null);
+			} catch (ExceptionInInitializerError e) {
+				String pass = textFieldDialog("Enter the password: ", true);
+				try {
+					startConnection(pass);
+				} catch (ExceptionInInitializerError e1) {
+		    		Alert alert = new Alert(AlertType.ERROR, "Unable to obtain connection!\nCheck connections settings and password.", ButtonType.OK);
+		    		alert.show();
+				}
+			}
 
     	} else {
            	session.close();    	      	
@@ -435,12 +452,17 @@ public class AppController implements Initializable {
 
     }
     
-    private String TextFieldDialog(String s) {
+    private String textFieldDialog(String s, boolean hide) {
     	Stage dialogStage = new Stage();
     	dialogStage.initModality(Modality.WINDOW_MODAL);
     	newProjectName = null;
     	
-    	TextField textField = new TextField();
+    	TextField textField;
+    	if(!hide) {
+    		textField = new TextField();
+    	} else {
+    		textField = new PasswordField();
+    	}
     	
     	HBox hbox = new HBox(new Text(s), textField);
     	hbox.setAlignment(Pos.CENTER);
@@ -484,7 +506,7 @@ public class AppController implements Initializable {
     @FXML
     void addProject(ActionEvent event) { 
     	try {
-        	String projectName = TextFieldDialog("Project name: ");
+        	String projectName = textFieldDialog("Project name: ", false);
         	obsProjectList.add(conn.addProject(projectName) );
     	} catch (NullPointerException e) {
     	}
