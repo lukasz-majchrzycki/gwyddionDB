@@ -21,7 +21,7 @@
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
 
-<VBox fx:id="windowPanel" prefHeight="650.0" prefWidth="1130.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="eu.nanocode.gwyddionDB.AppController">
+<VBox fx:id="windowPanel" prefHeight="650.0" prefWidth="1160.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="eu.nanocode.gwyddionDB.AppController">
   <children>
     <MenuBar VBox.vgrow="NEVER">
       <menus>
@@ -124,7 +124,7 @@
                   </ScrollPane>
                </children>
             </VBox>
-            <ScrollPane fx:id="centerPanel" minWidth="560.0">
+            <ScrollPane fx:id="centerPanel" minWidth="590.0">
                <content>
                   <VBox>
                      <children>
