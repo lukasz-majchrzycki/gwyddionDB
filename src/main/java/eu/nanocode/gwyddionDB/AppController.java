@@ -7,6 +7,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -210,16 +212,16 @@ public class AppController implements Initializable {
         colValue.setCellValueFactory(new PropertyValueFactory<>("Value"));
         obsDetails = FXCollections.observableArrayList(
         		new Detail("Title", "Title",null),
-        		new Detail("Min Z", "MinZ",null),
-        		new Detail("Max Z", "MaxZ",null),
+        		new Detail("Min Z", "MinZWithPrefix",null),
+        		new Detail("Max Z", "MaxZWithPrefix",null),
         		new Detail("X pixels", "Xres",null),
         		new Detail("Y pixels", "Yres",null),
-        		new Detail("X size", "Xreal",null),
-        		new Detail("Y size", "Yreal",null),
+        		new Detail("X size", "XrealWithPrefix",null),
+        		new Detail("Y size", "YrealWithPrefix",null),
         		new Detail("Creation Time", "CreationTimeString",null),
         		new Detail("Modification Time", "ModificationTimeString",null),
-        		new Detail("Lateral unit", "Si_unit_xy",null),
-        		new Detail("Z unit", "Si_unit_z",null),
+        		new Detail("Lateral unit", "Si_unit_xyWithPrefix",null),
+        		new Detail("Z unit", "Si_unit_zWithPrefix",null),
         		new Detail("Description", "Description",null)
         		);
        	detailsTable.setItems(obsDetails);
@@ -352,7 +354,14 @@ public class AppController implements Initializable {
 				
     			if(s.equals("get"+obsDetails.get(i).methodName) ){
 						try {
-						String s2=(f.invoke(obsImages.get(imageID).afmImage )).toString();
+						String s2;	
+						Object o = f.invoke(obsImages.get(imageID).afmImage ) ;	
+						if(o.getClass()== Double.class ) {
+							DecimalFormat df = new DecimalFormat("0.00");
+							s2=df.format((Double)o);
+						} else {
+							s2=o.toString();
+						}
 						obsDetails.set(i, new Detail(obsDetails.get(i).name, obsDetails.get(i).methodName, s2 )  );
 					} catch (IllegalAccessException | IllegalArgumentException
 							| InvocationTargetException e) {
