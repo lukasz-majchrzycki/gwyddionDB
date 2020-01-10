@@ -541,4 +541,24 @@ public class AppController implements Initializable {
         }
     }
     
+    @FXML
+    void menuStartStop(ActionEvent event) {
+    	
+    }
+    
+    @FXML
+    void menuPreferences(ActionEvent event) {
+    	
+    }
+    
+    @FXML
+    void menuQuit(ActionEvent event) {
+    	stage.close();
+    }
+    
+    @FXML
+    void menuAbout(ActionEvent event) {
+    	
+    }
+    
 }
