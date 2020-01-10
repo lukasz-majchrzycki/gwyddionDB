@@ -1,18 +1,14 @@
 package eu.nanocode.gwyddionDB;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.service.ServiceRegistry;
 
 public class HibernateUtil {
     private static SessionFactory sessionFactory;
-    private static String pass;
+    private static SQLConn connSettings;
     
-    public static void setPass(String password) {
-    	pass = password;
+    public static void setconnSettings(SQLConn conn) {
+    	connSettings = conn;
     }
     
     private static SessionFactory buildSessionFactory() 
@@ -20,14 +16,22 @@ public class HibernateUtil {
         try {
         	Configuration cfg = new Configuration();
         	cfg.configure("\\hibernate.properties\\hibernate.cfg.xml");
-        	if(pass!=null) {
-        		cfg.getProperties().setProperty("hibernate.connection.password", pass);
+        	if(connSettings!=null) {
+        		cfg.getProperties().setProperty("hibernate.connection.username", connSettings.user);
+        		cfg.getProperties().setProperty("hibernate.connection.password", connSettings.password);
+        		
+        		if(connSettings.conifg!=SQLConn.SQLConfig.Other) {
+            		cfg.getProperties().setProperty("hibernate.connection.driver_class", connSettings.conifg.driver_class);
+            		cfg.getProperties().setProperty("hibernate.dialect", connSettings.conifg.dialect);
+            		cfg.getProperties().setProperty("hibernate.connection.url", connSettings.conifg.urlPrefix + connSettings.url + (connSettings.useSSL ? "" : "?useSSL=false") );
+        		}
+        		else {
+            		cfg.getProperties().setProperty("hibernate.connection.driver_class", connSettings.other_driver_class);
+            		cfg.getProperties().setProperty("hibernate.dialect", connSettings.other_dialect);
+            		cfg.getProperties().setProperty("hibernate.connection.url", connSettings.url + (connSettings.useSSL ? "" : "?useSSL=false") );
+        		}	
+        										
         	}
-        	/*
-        	ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()//
-                    .configure("\\hibernate.properties\\hibernate.cfg.xml").build();
-        	Metadata metadata = new MetadataSources(serviceRegistry).getMetadataBuilder().build();
-        	return metadata.getSessionFactoryBuilder().build();*/
         	return cfg.buildSessionFactory();
  
         } catch (Throwable ex) {

@@ -1,28 +1,25 @@
 package eu.nanocode.gwyddionDB;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Field;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Observable;
 import java.util.ResourceBundle;
 
 import javax.persistence.TransactionRequiredException;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
@@ -38,7 +35,11 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ScrollPane;
@@ -61,6 +62,7 @@ import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 
 public class AppController implements Initializable {
 	
@@ -201,6 +203,7 @@ public class AppController implements Initializable {
     
     private String newProjectName;
     private Label emptyProjectInfo;
+    private SQLConn connSettings;
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -270,10 +273,17 @@ public class AppController implements Initializable {
        	removeButton.setDisable(!connState);
        	addProjectButton.setDisable(!connState);
        	removeProjectButton.setDisable(!connState);
+       	
+    	try(ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("settings.bin"))){
+    		connSettings = (SQLConn) inputStream.readObject();
+    	} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
     }
     
-    private void startConnection(String pass) {
-    	HibernateUtil.setPass(pass);
+    private void startConnection() {
+    	HibernateUtil.setconnSettings(connSettings);
 		session = HibernateUtil.getSessionFactory().openSession();
 		session.beginTransaction();
 		conn = new GwyddionDbConn(session);
@@ -289,11 +299,11 @@ public class AppController implements Initializable {
     void connect(ActionEvent event) {
     	if(!connState) {
         	try {
-        		startConnection(null);
+        		startConnection();
 			} catch (ExceptionInInitializerError e) {
-				String pass = textFieldDialog("Enter the password: ", true);
+				connSettings.password = textFieldDialog("Enter the password: ", true);
 				try {
-					startConnection(pass);
+					startConnection();
 				} catch (ExceptionInInitializerError e1) {
 		    		Alert alert = new Alert(AlertType.ERROR, "Unable to obtain connection!\nCheck connections settings and password.", ButtonType.OK);
 		    		alert.show();
@@ -543,12 +553,93 @@ public class AppController implements Initializable {
     
     @FXML
     void menuStartStop(ActionEvent event) {
-    	
+    	connect(event);
     }
     
     @FXML
     void menuPreferences(ActionEvent event) {
+       	Dialog<SQLConn> dialog = new Dialog<>();
+    	dialog.setTitle("SQL connection properties");
+    	Label label1 = new Label("Use database: ");
+    	Label label2 = new Label("Connection URL (with port): ");
+    	Label label2a = new Label("Use SSL");
+    	Label label3 = new Label();
+    	Label label4 = new Label("User name: ");
+    	Label label5 = new Label("Password (optional): ");
+    	Label label6 = new Label("Driver: ");
+    	Label label7 = new Label("Dialect: ");
     	
+    	ComboBox<SQLConn.SQLConfig> dbBox = new ComboBox<>();
+    	dbBox.setItems(  FXCollections.observableArrayList(SQLConn.SQLConfig.values()));
+    	dbBox.setValue(SQLConn.SQLConfig.MySQL);
+    	TextField urlField = new TextField();
+    	TextField userField = new TextField();
+    	TextField passwordField = new PasswordField();
+    	TextField defaultDriverField = new TextField();
+    	defaultDriverField.setDisable(true);
+    	TextField defaultDialectField = new TextField();
+    	defaultDialectField.setDisable(true);
+    	CheckBox sslBox = new CheckBox();
+    	
+    	if(connSettings!=null) {
+    		urlField.setText(connSettings.url);
+    		userField.setText(connSettings.user);
+    		passwordField.setText(connSettings.password);
+    		dbBox.setValue(connSettings.conifg);
+    		sslBox.setSelected(connSettings.useSSL);
+    		if(dbBox.getValue()== SQLConn.SQLConfig.Other) {
+    			defaultDriverField.setText(connSettings.other_driver_class);
+    			defaultDialectField.setText(connSettings.other_dialect);
+    		}
+    	}
+    	
+    	dbBox.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				urlField.setText("");			
+			}
+    	});
+    	
+    	GridPane grid = new GridPane();
+    	grid.addRow(1, label1, dbBox);
+    	grid.addRow(2, label2, urlField, label2a, sslBox);
+    	grid.addRow(3, label3);
+    	grid.addRow(4, label4, userField);
+    	grid.addRow(5, label5, passwordField);
+    	grid.addRow(6, label6, defaultDriverField);
+    	grid.addRow(7, label7, defaultDialectField);
+    	dialog.getDialogPane().setContent(grid);
+    	
+    	ButtonType buttonTypeOk = new ButtonType("OK", ButtonData.OK_DONE);
+    	ButtonType buttonTypeCancel = new ButtonType("Cancel", ButtonData.CANCEL_CLOSE);
+    	dialog.getDialogPane().getButtonTypes().addAll(buttonTypeOk, buttonTypeCancel);
+    	
+    	dialog.setResultConverter(new Callback<ButtonType, SQLConn>() {
+    	    @Override
+    	    public SQLConn call(ButtonType b) {
+    	        if (b == buttonTypeOk) {
+    	        	if(dbBox.getValue()==SQLConn.SQLConfig.Other) {
+    	        		connSettings = new SQLConn(dbBox.getValue(), userField.getText(), passwordField.getText(), urlField.getText(), sslBox.isSelected(),
+        	        			defaultDriverField.getText() , defaultDialectField.getText());
+    	        	}
+    	        	else {
+    	        		connSettings = new SQLConn(dbBox.getValue(), userField.getText(), passwordField.getText(), urlField.getText(), sslBox.isSelected());
+    	        	}
+    	        	try(ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("settings.bin"))) {
+    	        		outputStream.writeObject(connSettings);
+    	        	} catch (Exception e) {
+    	    			// TODO Auto-generated catch block
+    	    			e.printStackTrace();
+    	    		}
+    	        	
+    	        	return connSettings;
+    	        }    	 
+   	        return null;
+    	    }
+    	});
+    	
+    	dialog.showAndWait();
     }
     
     @FXML
