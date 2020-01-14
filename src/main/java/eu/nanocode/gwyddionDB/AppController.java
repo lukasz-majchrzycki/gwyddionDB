@@ -14,6 +14,8 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 import javax.persistence.TransactionRequiredException;
@@ -31,7 +33,6 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
@@ -201,7 +202,6 @@ public class AppController implements Initializable {
     private ObservableMap<Long, ImageData> obsImages;
     private ObservableList<Detail> obsDetails;
     
-    private String newProjectName;
     private Label emptyProjectInfo;
     private SQLConn connSettings;
     
@@ -301,10 +301,10 @@ public class AppController implements Initializable {
         	try {
         		startConnection();
 			} catch (ExceptionInInitializerError e) {
-				connSettings.password = textFieldDialog("Enter the password: ", true);
 				try {
-					startConnection();
-				} catch (ExceptionInInitializerError e1) {
+				connSettings.password = textFieldDialog("Enter the password: ", true).get();
+				startConnection();
+				} catch (ExceptionInInitializerError | NoSuchElementException e1) {
 		    		Alert alert = new Alert(AlertType.ERROR, "Unable to obtain connection!\nCheck connections settings and password.", ButtonType.OK);
 		    		alert.show();
 				}
@@ -462,10 +462,9 @@ public class AppController implements Initializable {
 
     }
     
-    private String textFieldDialog(String s, boolean hide) {
-    	Stage dialogStage = new Stage();
+    private Optional<String> textFieldDialog(String s, boolean hide) {
+    	Dialog<String> dialogStage = new Dialog<>();
     	dialogStage.initModality(Modality.WINDOW_MODAL);
-    	newProjectName = null;
     	
     	TextField textField;
     	if(!hide) {
@@ -477,48 +476,37 @@ public class AppController implements Initializable {
     	HBox hbox = new HBox(new Text(s), textField);
     	hbox.setAlignment(Pos.CENTER);
     	hbox.setSpacing(10);
+    	   	
+    	ButtonType buttonTypeOk = new ButtonType("OK", ButtonData.OK_DONE);
+    	ButtonType buttonTypeCancel = new ButtonType("Cancel", ButtonData.CANCEL_CLOSE);
     	
-    	Button OkButton = new Button("OK");
-    	OkButton.setOnAction( new EventHandler<ActionEvent>() {
+    	dialogStage.getDialogPane().getButtonTypes().addAll(buttonTypeOk, buttonTypeCancel);
+    	
+    	hbox.setAlignment(Pos.CENTER);
+    	hbox.setPadding( new Insets(10,10,10,10) );
+    	hbox.setSpacing(10);
 
-			@Override
-			public void handle(ActionEvent event) {
-				newProjectName = textField.getText();
-				dialogStage.close();
-			}
-    		
-    	});
+    	dialogStage.getDialogPane().setContent(hbox);
     	
-    	Button CancelButton = new Button("Cancel");
-    	CancelButton.setOnAction( new EventHandler<ActionEvent>() {
-
-			@Override
-			public void handle(ActionEvent event) {
-				dialogStage.close();
-			}
-    		
-    	});
-    	
-    	HBox hbox2 = new HBox(OkButton, CancelButton);
-    	hbox2.setAlignment(Pos.CENTER);
-    	hbox2.setSpacing(10);
-    	VBox vbox = new VBox(hbox, hbox2);
-    	vbox.setAlignment(Pos.CENTER);
-    	vbox.setPadding( new Insets(10,10,10,10) );
-    	vbox.setSpacing(10);
-
-    	dialogStage.setScene(new Scene(vbox));
-    	dialogStage.showAndWait();
-    	
-    	return newProjectName;
+    	dialogStage.setResultConverter(new Callback<ButtonType, String>() {
+    	    @Override
+    	    public String call(ButtonType b) {
+    	        if (b == buttonTypeOk) {
+    	        	return textField.getText();
+    	        }
+				return null;
+    	    }   
+    	}
+    	    );
+    	return dialogStage.showAndWait();
     }
     
     @FXML
     void addProject(ActionEvent event) { 
     	try {
-        	String projectName = textFieldDialog("Project name: ", false);
+        	String projectName = textFieldDialog("Project name: ", false).get();
         	obsProjectList.add(conn.addProject(projectName) );
-    	} catch (NullPointerException e) {
+    	} catch (NoSuchElementException e) {
     	}
     }
     
