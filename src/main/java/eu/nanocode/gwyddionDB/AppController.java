@@ -18,10 +18,10 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
+import javax.persistence.PersistenceException;
 import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.Session;
-
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
@@ -64,6 +64,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class AppController implements Initializable {
 	
@@ -205,8 +209,12 @@ public class AppController implements Initializable {
     private Label emptyProjectInfo;
     private SQLConn connSettings;
     
+    private Logger logger;
+    
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+    	logger = LoggerFactory.getLogger(AppController.class);
+  	  	
        	colName.setCellValueFactory(new PropertyValueFactory<>("ProjectName"));
        	colModification.setCellValueFactory(new PropertyValueFactory<>("ModificationTimeString"));
        	colCreation.setCellValueFactory(new PropertyValueFactory<>("CreationTimeString"));
@@ -274,11 +282,12 @@ public class AppController implements Initializable {
        	addProjectButton.setDisable(!connState);
        	removeProjectButton.setDisable(!connState);
        	
+       	logger.info("Initialize.");
+       	
     	try(ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("settings.bin"))){
     		connSettings = (SQLConn) inputStream.readObject();
     	} catch (Exception e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Settings file reading error. {}", e1.getMessage());
 		}
     }
     
@@ -302,9 +311,11 @@ public class AppController implements Initializable {
         		startConnection();
 			} catch (ExceptionInInitializerError e) {
 				try {
+				logger.warn("Wrong password entered");	
 				connSettings.password = textFieldDialog("Enter the password: ", true).get();
 				startConnection();
 				} catch (ExceptionInInitializerError | NoSuchElementException e1) {
+					logger.error("Wrong password entered. No connection obtained.");
 		    		Alert alert = new Alert(AlertType.ERROR, "Unable to obtain connection!\nCheck connections settings and password.", ButtonType.OK);
 		    		alert.show();
 				}
@@ -392,6 +403,7 @@ public class AppController implements Initializable {
 						obsDetails.set(i, new Detail(obsDetails.get(i).name, obsDetails.get(i).methodName, s2 )  );
 					} catch (IllegalAccessException | IllegalArgumentException
 							| InvocationTargetException e) {
+						logger.debug("Wrong get mathod name {} for image parameters reading.",s);
 					}
 
 
@@ -505,7 +517,15 @@ public class AppController implements Initializable {
     void addProject(ActionEvent event) { 
     	try {
         	String projectName = textFieldDialog("Project name: ", false).get();
-        	obsProjectList.add(conn.addProject(projectName) );
+        	try {
+        		obsProjectList.add(conn.addProject(projectName) );
+        	} catch (PersistenceException e1){
+        		logger.warn("Duplicate project name. {} ", e1.getMessage() );
+        		Alert alert = new Alert(AlertType.ERROR, "Duplicate project name. Choose a different name.", ButtonType.OK);
+        		alert.show();
+        	}
+        	
+        	
     	} catch (NoSuchElementException e) {
     	}
     }
@@ -522,6 +542,7 @@ public class AppController implements Initializable {
     		alert.show();
     	} 
     	catch (TransactionRequiredException e) {
+    		logger.warn("Error during remove project. {} ",e.getMessage());
     		Alert alert = new Alert(AlertType.ERROR, "Error during remove project. Reconnect database and try again", ButtonType.OK);
     		alert.show();
     	}
@@ -617,7 +638,7 @@ public class AppController implements Initializable {
     	        	try(ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("settings.bin"))) {
     	        		outputStream.writeObject(connSettings);
     	        	} catch (Exception e) {
-    	    			// TODO Auto-generated catch block
+    	        		logger.warn("Settings file writing error. {}", e.getMessage());
     	    			e.printStackTrace();
     	    		}
     	        	
