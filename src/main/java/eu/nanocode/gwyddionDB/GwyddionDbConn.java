@@ -1,5 +1,6 @@
 package eu.nanocode.gwyddionDB;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.hibernate.Session;
 
@@ -42,26 +43,27 @@ public class GwyddionDbConn implements AfmDBConnection{
 		return list;
 	}
 
-	private long saveImage(long projectId, AfmImage afmImage) {
+	private AfmImage saveImage(long projectId, AfmImage afmImage) {
 		long id = afmImage.generateID();
 		session.save(afmImage);
 		session.save(new ProjectImageLink(id,projectId));
-		return id;
+		return afmImage;
 	}
 	@Override
-	public long sendAfmImage(long projectId, AfmImage afmImage) {
-		long id = this.saveImage(projectId, afmImage);
+	public AfmImage sendAfmImage(long projectId, AfmImage afmImage) {
+		AfmImage img = this.saveImage(projectId, afmImage);
 		session.getTransaction().commit();
-		return id;
+		return img;
 	}
 
 	@Override
-	public boolean sendAll(long projectId, List<AfmImage> afmImageList) {
+	public List<AfmImage> sendAll(long projectId, List<AfmImage> afmImageList) {
+		List<AfmImage> newList= new ArrayList<>();
 		for(AfmImage afmImage : afmImageList) {
-			this.saveImage(projectId, afmImage);
+			newList.add(this.saveImage(projectId, afmImage) );
 		}
 		session.getTransaction().commit();
-		return true;
+		return newList;
 	}
 
 	@Override
@@ -72,12 +74,12 @@ public class GwyddionDbConn implements AfmDBConnection{
 	}
 
 	@Override
-	public long addProject(String projectName) {
+	public ProjectItem addProject(String projectName) {
 		ProjectItem proj = new ProjectItem(projectName);
 		long id = proj.generateID();
 		session.save(proj);
 		session.getTransaction().commit();
-		return id;
+		return proj;
 	}
 	
 	public boolean removeAllImagesFromProject(long projectId) {
@@ -91,11 +93,12 @@ public class GwyddionDbConn implements AfmDBConnection{
 	}
 
 	@Override
-	public boolean removeProject(long projectId) {
+	public ProjectItem removeProject(long projectId) {
+		List<ProjectItem> proj = session.createQuery("select o from " + ProjectItem.class.getName() + " o where projectID="+projectId).getResultList();
 		this.removeAllImagesFromProject(projectId);
 		session.createQuery("delete ProjectItem  where projectID="+projectId).executeUpdate();
 		session.createQuery("delete ProjectImageLink  where projectID="+projectId).executeUpdate();
-		return true;
+		return proj.get(0) ;
 	}
 
 	@Override

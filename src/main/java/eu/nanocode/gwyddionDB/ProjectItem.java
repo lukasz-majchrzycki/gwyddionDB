@@ -2,6 +2,7 @@ package eu.nanocode.gwyddionDB;
 
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -32,6 +33,8 @@ public class ProjectItem {
 	@Column(name = "DESTINATION", unique = false, nullable = true, length = 500)
 	public URI destination;
 	
+	private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	
 	public ProjectItem() {
 		this.creationTime = LocalDateTime.now();
 		this.modificationTime = LocalDateTime.now();
@@ -57,6 +60,14 @@ public class ProjectItem {
 
 	public LocalDateTime getModificationTime() {
 		return modificationTime;
+	}
+	
+	public String getCreationTimeString() {
+		return creationTime.format(formatter);
+	}
+
+	public String getModificationTimeString() {
+		return modificationTime.format(formatter);
 	}
 
 	public long getProjectID() {

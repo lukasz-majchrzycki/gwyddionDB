@@ -1,43 +1,58 @@
 package eu.nanocode.gwyddionDB;
 
-import java.util.List;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import org.hibernate.Session;
+
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 
 
-public class App 
+public class App extends Application
 {
+	private Parent root;
+	private FXMLLoader loader;
 		
 	public static void main( String[] args ) throws IOException
     {
-		App main=new App();
-    	Session session = HibernateUtil.getSessionFactory().openSession();
-    	session.beginTransaction();
-		    	
-       	File file = main.getFileFromResources("test.gwy");
-       	List<AfmImage> afmImageList = new GwyddionReader().readAfmFile(file);  
-        
-       	GwyddionDbConn conn = new GwyddionDbConn(session);
- 
-       	session.close();    	      	
-      	HibernateUtil.shutdown(); 	
+		launch();	
     }
     
     
-    private File getFileFromResources(String fileName) {
-
-        ClassLoader classLoader = getClass().getClassLoader();
-
-        URL resource = classLoader.getResource(fileName);
+    private URL getFileFromResources(String fileName) {
+        URL resource = App.class.getResource(fileName);
         if (resource == null) {
             throw new IllegalArgumentException("file is not found!");
         } else {
-            return new File(resource.getFile());
+            return resource;
         }
 
     }
+
+
+	@Override
+	public void start(Stage primaryStage) throws Exception, IOException {     		
+        loader=new FXMLLoader(this.getFileFromResources("gwyddionDB.fxml"));        
+        root=loader.load();
+        ((AppController) loader.getController()).stage = primaryStage; 
+        Scene scene = new Scene(root);
+        scene.getStylesheets().add(this.getFileFromResources("application.css").toExternalForm());
+        primaryStage.setScene(scene);
+        primaryStage.setTitle("GwyddionDB utility");
+        primaryStage.setResizable(false);
+        primaryStage.show();
+	}
+	
+	@Override
+	public void stop() {
+		AppController appController = ((AppController) loader.getController());
+		if ( appController.connState ) {
+           	appController.session.close();    	      	
+          	HibernateUtil.shutdown(); 
+		}
+	}
     
  
 }
