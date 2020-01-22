@@ -15,7 +15,7 @@ public class HibernateUtil {
     {
         try {
         	Configuration cfg = new Configuration();
-        	cfg.configure("\\hibernate.properties\\hibernate.cfg.xml");
+        	cfg.configure(HibernateUtil.class.getResource("hibernate.cfg.xml") );
         	if(connSettings!=null) {
         		cfg.getProperties().setProperty("hibernate.connection.username", connSettings.user);
         		cfg.getProperties().setProperty("hibernate.connection.password", connSettings.password);
@@ -32,6 +32,7 @@ public class HibernateUtil {
         		}	
         										
         	}
+
         	return cfg.buildSessionFactory();
  
         } catch (Throwable ex) {

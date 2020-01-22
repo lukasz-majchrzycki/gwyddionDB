@@ -70,11 +70,6 @@ import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-
-
 public class AppController implements Initializable {
 	
 	private class Panel{
@@ -217,17 +212,10 @@ public class AppController implements Initializable {
     private SQLConn connSettings;
     
     private Logger logger;
-    Model model;
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
     	logger = LoggerFactory.getLogger(AppController.class);
-    	MavenXpp3Reader reader = new MavenXpp3Reader();
-    	try {
-			model = reader.read(new FileReader("pom.xml"));
-		} catch (IOException | XmlPullParserException e) {
-			logger.error("No pom.xml file!");
-		}
   	  	
        	colName.setCellValueFactory(new PropertyValueFactory<>("ProjectName"));
        	colModification.setCellValueFactory(new PropertyValueFactory<>("ModificationTimeString"));
@@ -681,12 +669,12 @@ public class AppController implements Initializable {
  
             @Override
             public void handle(ActionEvent event) {
-            	root.getHostServices().showDocument(model.getUrl());
+            	root.getHostServices().showDocument("http://nano-code.eu/code");
             }
         });
         VBox vbox = new VBox();
                 
-        vbox.getChildren().addAll(new Label("GwyddionDB"), new Label("version: " +model.getVersion() ), hyperlink);
+        vbox.getChildren().addAll(new Label("GwyddionDB"), new Label("version: 0.1"), hyperlink);
         
 		alert.getDialogPane().setContent(vbox);
 		alert.setTitle("About GwyddionDB");
