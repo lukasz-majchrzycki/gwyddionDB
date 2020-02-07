@@ -37,6 +37,7 @@ public class App extends Application
         loader=new FXMLLoader(this.getFileFromResources("gwyddionDB.fxml"));        
         root=loader.load();
         ((AppController) loader.getController()).stage = primaryStage; 
+        ((AppController) loader.getController()).root = this;
         Scene scene = new Scene(root);
         scene.getStylesheets().add(this.getFileFromResources("application.css").toExternalForm());
         primaryStage.setScene(scene);

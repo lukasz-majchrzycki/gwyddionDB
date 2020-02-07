@@ -3,6 +3,7 @@ package eu.nanocode.gwyddionDB;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -41,6 +42,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ScrollPane;
@@ -68,7 +70,6 @@ import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class AppController implements Initializable {
 	
 	private class Panel{
@@ -85,6 +86,7 @@ public class AppController implements Initializable {
 	}
 	
 	protected Stage stage;
+	protected App root;
 	protected final FileChooser fileChooser = new FileChooser();
 	
 	Panel leftPanelObj, rightPanelObj; 
@@ -170,6 +172,9 @@ public class AppController implements Initializable {
     private Label leftStatus;
     @FXML
     private Label rightStatus;
+    
+    @FXML
+    private ScrollPane scrollProjPane;
        
     private class ImageData{
     	AfmImage afmImage;
@@ -272,6 +277,9 @@ public class AppController implements Initializable {
        	centerPanel.setFitToWidth(true);
        	leftPanel.setFillWidth(true);
        	rightPanel.setFitToWidth(true);
+       	scrollProjPane.setPrefWidth(leftPanelObj.width-5);
+       	scrollProjPane.setFitToWidth(true);
+       	leftStatus.setText("Disconnected");
        	
        	fileChooser.setTitle("Open AFM data File");
        	fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("gwyddion files", "*.gwy") );
@@ -306,7 +314,7 @@ public class AppController implements Initializable {
 
     @FXML
     void connect(ActionEvent event) {
-    	if(!connState) {
+    	if(!connState) {	
         	try {
         		startConnection();
 			} catch (ExceptionInInitializerError e) {
@@ -335,6 +343,7 @@ public class AppController implements Initializable {
        	removeButton.setDisable(!connState);
        	addProjectButton.setDisable(!connState);
        	removeProjectButton.setDisable(!connState);
+       	leftStatus.setText(connState ? "Connected" : "Disconnected");
     	
     }
     
@@ -456,7 +465,14 @@ public class AppController implements Initializable {
     		ProjectItem selectedProject = projectList.getSelectionModel().getSelectedItem();
     		projID=selectedProject.getProjectID();
      		List<AfmImage> newImgList = new ArrayList<>();
-    		newImgList.addAll(conn.getAll(projID));
+     		try {
+     			newImgList.addAll(conn.getAll(projID));
+     		} catch (IllegalStateException e) {
+     			logger.error("Cannot load projects list. " + e.getMessage());
+     			Alert alert = new Alert(AlertType.ERROR, "Something goes wrong. Reconnect and try again.", ButtonType.OK);
+     			alert.show();
+     		}
+    		
     		obsImages.clear();		
     		
     		imgPanel.getChildren().clear();
@@ -658,7 +674,23 @@ public class AppController implements Initializable {
     
     @FXML
     void menuAbout(ActionEvent event) {
-    	
+		Alert alert = new Alert(AlertType.NONE, "About", ButtonType.OK);
+		Hyperlink hyperlink = new Hyperlink("Go to GwyddionDB home page");
+ 
+        hyperlink.setOnAction(new EventHandler<ActionEvent>() {
+ 
+            @Override
+            public void handle(ActionEvent event) {
+            	root.getHostServices().showDocument("http://nano-code.eu/code");
+            }
+        });
+        VBox vbox = new VBox();
+                
+        vbox.getChildren().addAll(new Label("GwyddionDB"), new Label("version: 0.1"), hyperlink);
+        
+		alert.getDialogPane().setContent(vbox);
+		alert.setTitle("About GwyddionDB");
+		alert.show();
     }
     
 }
