@@ -172,6 +172,9 @@ public class AppController implements Initializable {
     private Label leftStatus;
     @FXML
     private Label rightStatus;
+    
+    @FXML
+    private ScrollPane scrollProjPane;
        
     private class ImageData{
     	AfmImage afmImage;
@@ -274,6 +277,8 @@ public class AppController implements Initializable {
        	centerPanel.setFitToWidth(true);
        	leftPanel.setFillWidth(true);
        	rightPanel.setFitToWidth(true);
+       	scrollProjPane.setPrefWidth(leftPanelObj.width-5);
+       	scrollProjPane.setFitToWidth(true);
        	leftStatus.setText("Disconnected");
        	
        	fileChooser.setTitle("Open AFM data File");
@@ -460,7 +465,14 @@ public class AppController implements Initializable {
     		ProjectItem selectedProject = projectList.getSelectionModel().getSelectedItem();
     		projID=selectedProject.getProjectID();
      		List<AfmImage> newImgList = new ArrayList<>();
-    		newImgList.addAll(conn.getAll(projID));
+     		try {
+     			newImgList.addAll(conn.getAll(projID));
+     		} catch (IllegalStateException e) {
+     			logger.error("Cannot load projects list. " + e.getMessage());
+     			Alert alert = new Alert(AlertType.ERROR, "Something goes wrong. Reconnect and try again.", ButtonType.OK);
+     			alert.show();
+     		}
+    		
     		obsImages.clear();		
     		
     		imgPanel.getChildren().clear();

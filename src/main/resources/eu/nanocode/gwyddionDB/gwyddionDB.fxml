@@ -87,9 +87,9 @@
                         <Insets bottom="5.0" />
                      </padding>
                   </Separator>
-                  <ScrollPane minHeight="-Infinity" minWidth="0.0">
+                  <ScrollPane fx:id="scrollProjPane" minHeight="-Infinity" minWidth="0.0" prefWidth="284.0">
                      <content>
-                        <TableView fx:id="projectList" minHeight="-Infinity" minWidth="0.0" prefHeight="573.0" prefWidth="282.0">
+                        <TableView fx:id="projectList" maxWidth="-Infinity" minHeight="-Infinity" minWidth="0.0" prefHeight="573.0" prefWidth="278.0">
                            <columns>
                               <TableColumn fx:id="colName" prefWidth="120.0" text="Name" />
                               <TableColumn fx:id="colModification" editable="false" text="Modification" />
@@ -140,12 +140,12 @@
                                     </Button>
                                  </children>
                               </HBox>
-                              <Button fx:id="leftButton" mnemonicParsing="false" onAction="#leftPanelChange" prefWidth="30.0" text="&lt;&lt;">
+                              <Button fx:id="leftButton" minWidth="-Infinity" mnemonicParsing="false" onAction="#leftPanelChange" prefHeight="25.0" prefWidth="30.0" text="&lt;&lt;">
                                  <font>
                                     <Font name="Arial Narrow" size="10.0" />
                                  </font>
                               </Button>
-                              <Button fx:id="rightButton" mnemonicParsing="false" onAction="#rightPanelChange" prefWidth="30.0" text="&gt;&gt;" GridPane.columnIndex="3" GridPane.halignment="RIGHT">
+                              <Button fx:id="rightButton" minWidth="-Infinity" mnemonicParsing="false" onAction="#rightPanelChange" prefHeight="25.0" prefWidth="30.0" text="&gt;&gt;" GridPane.columnIndex="3" GridPane.halignment="RIGHT">
                                  <font>
                                     <Font name="Arial Narrow" size="10.0" />
                                  </font>
@@ -178,7 +178,7 @@
             </ScrollPane>
          </children>
       </HBox>
-    <HBox id="HBox" alignment="CENTER_LEFT" prefHeight="16.0" spacing="5.0" VBox.vgrow="NEVER">
+    <HBox id="HBox" alignment="CENTER_LEFT" maxHeight="-Infinity" prefHeight="16.0" spacing="5.0" VBox.vgrow="NEVER">
       <children>
         <Label fx:id="leftStatus" maxHeight="1.7976931348623157E308" maxWidth="-1.0" HBox.hgrow="ALWAYS">
           <font>
